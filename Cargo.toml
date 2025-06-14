@@ -1,0 +1,26 @@
+[package]
+name = "cursor-rules"
+version = "0.1.0"
+edition = "2021"
+authors = ["Your Name <your.email@example.com>"]
+description = "A CLI tool for managing Cursor rules from GitHub repositories"
+readme = "README.md"
+homepage = "https://github.com/tkozzer/cursor-rules-cli"
+repository = "https://github.com/tkozzer/cursor-rules-cli"
+license = "MIT"
+keywords = ["cli", "cursor", "rules", "github", "development"]
+categories = ["command-line-utilities", "development-tools"]
+exclude = [
+    "docs/*",
+    ".cursor/*",
+    ".git/*",
+    "*.md",
+    "!README.md"
+]
+
+[[bin]]
+name = "cursor-rules"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4.5.40", features = ["derive"] }

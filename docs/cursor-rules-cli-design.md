@@ -20,6 +20,7 @@
 14. [Testing & QA Plan](#14-testing--qa-plan)
 15. [Roadmap & Milestones](#15-roadmap--milestones)
 16. [License & Governance](#16-license--governance)
+17. [Detailed Task Plan](#17-detailed-task-plan)
 
 ---
 
@@ -27,7 +28,7 @@
 
 * **Project name:** `cursor-rules-cli`
 * **Repository:** `github.com/tkozzer/cursor-rules-cli` (fresh repo)
-* **Purpose:** Provide an interactive, cross‑platform Rust CLI that allows developers to browse **any** GitHub repo named `cursor-rules` (their own or others’) and copy selected `.mdc` rule files—or pre‑defined “quick‑add” bundles—into the directory where the CLI is executed (typically `./.cursor/rules`).
+* **Purpose:** Provide an interactive, cross‑platform Rust CLI that allows developers to browse **any** GitHub repo named `cursor-rules` (their own or others's) and copy selected `.mdc` rule files—or pre‑defined "quick‑add" bundles—into the directory where the CLI is executed (typically `./.cursor/rules`).
 * **Scope (v1):** Interactive browsing; quick‑add bundles; PAT‑based auth for private repos; local config; overwrite prompts; binary releases for Linux/macOS/Windows.
 * **Non‑Goals (v1):** Editing rule files in place; pushing changes back; rule templating; GUI.
 
@@ -203,7 +204,7 @@ pub struct Manifest {
 
   * Saved via `keyring` crate (macOS Keychain, wincred, secret service).
   * Cli never prints token; `--token` overrides but is discouraged.
-* **Path traversal:** Validate that downloaded file paths don’t traverse (`..`) outside destination dir.
+* **Path traversal:** Validate that downloaded file paths don't traverse (`..`) outside destination dir.
 * **Symlink ignore:** Skip symlinks in repo to avoid surprises.
 * **Telemetry opt‑in:** COLLECT (cmd, duration) with SHA‑256 anonymised owner; respect `NO_TELEMETRY=1`.
 
@@ -260,6 +261,21 @@ pub struct Manifest {
 * **License:** MIT OR Apache‑2.0 dual (same as Rust ecosystem norms).
 * **CLA:** Not required initially; revisit if external contributors grow.
 * **Contribution Guide:** Conventional Commits + automatic release notes via `cargo-release`.
+
+## 17. Detailed Task Plan
+
+A granular, living task board is maintained under [`docs/tasks/`](tasks/README.md).
+
+### Quick Links
+
+- [FR-1 – Repo Discovery](tasks/fr1-repo-discovery.md)
+- [FR-2 – Interactive Browser (TUI)](tasks/fr2-interactive-browser.md)
+- [FR-3 – Quick-Add Support](tasks/fr3-quick-add-support.md)
+- [FR-4 – Config & Authentication](tasks/fr4-config-auth.md)
+- [FR-5 – Copy Semantics](tasks/fr5-copy-semantics.md)
+- [FR-6 – Offline Cache](tasks/fr6-offline-cache.md)
+- [FR-7 – Telemetry](tasks/fr7-telemetry.md)
+- [QA – CI / Testing / Release](tasks/qa-ci-testing-release.md)
 
 ---
 

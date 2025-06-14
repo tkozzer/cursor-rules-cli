@@ -3,7 +3,7 @@ use clap::{Parser, Subcommand};
 #[derive(Parser)]
 #[command(
     name = "cursor-rules",
-    version = "0.1.0",
+    version = "0.1.1",
     author = "Tyler Kozlowski <tkoz.dev@gmail.com>",
     about = "A CLI tool for managing Cursor rules from GitHub repositories",
     long_about = "An interactive, cross-platform Rust CLI that allows developers to browse GitHub repositories named 'cursor-rules' and copy selected .mdc rule files into their projects."

@@ -95,7 +95,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 This is currently a barebones implementation. Full functionality is coming soon!
 
-**Current Version: 0.1.0 - Basic CLI structure only**
+**Current Version: 0.1.1 - Basic CLI structure only**
 
 ### Planned Features
 

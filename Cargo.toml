@@ -1,8 +1,8 @@
 [package]
 name = "cursor-rules"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
-authors = ["Your Name <your.email@example.com>"]
+authors = ["Tyler Kozlowski <tkoz.dev@gmail.com>"]
 description = "A CLI tool for managing Cursor rules from GitHub repositories"
 readme = "README.md"
 homepage = "https://github.com/tkozzer/cursor-rules-cli"

@@ -1,4 +1,6 @@
 use clap::{Parser, Subcommand};
+mod github;
+use tracing_subscriber;
 
 #[derive(Parser)]
 #[command(
@@ -69,41 +71,36 @@ enum Commands {
     Completions { shell: String },
 }
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let cli = Cli::parse();
 
     if cli.verbose {
-        println!("Verbose mode enabled");
+        // Initialise tracing subscriber in verbose mode
+        tracing_subscriber::fmt()
+            .with_max_level(tracing::Level::DEBUG)
+            .init();
     }
 
-    match &cli.command {
-        Some(Commands::Browse) => {
-            println!("Browse mode - not implemented yet");
+    match github::resolve_repo(
+        cli.owner.clone(),
+        cli.repo.clone(),
+        cli.branch.clone(),
+        cli.token.clone(),
+    )
+    .await
+    {
+        Ok(locator) => {
+            println!(
+                "Resolved repo: {}/{}@{}",
+                locator.owner, locator.repo, locator.branch
+            );
         }
-        Some(Commands::QuickAdd { id }) => {
-            println!("Quick-add mode with ID: {} - not implemented yet", id);
-        }
-        Some(Commands::List) => {
-            println!("List mode - not implemented yet");
-        }
-        Some(Commands::Config) => {
-            println!("Config mode - not implemented yet");
-        }
-        Some(Commands::Cache { action }) => {
-            println!("Cache mode with action: {:?} - not implemented yet", action);
-        }
-        Some(Commands::Completions { shell }) => {
-            println!("Completions for shell: {} - not implemented yet", shell);
-        }
-        None => {
-            // Default to browse mode when no subcommand is provided
-            println!("Interactive browse mode - not implemented yet");
-            println!("Owner: {:?}", cli.owner);
-            println!("Repo: {:?}", cli.repo);
-            println!("Branch: {:?}", cli.branch);
-            println!("Output: {:?}", cli.out);
-            println!("Dry run: {}", cli.dry_run);
-            println!("Force: {}", cli.force);
+        Err(e) => {
+            eprintln!("Error resolving repository: {e}");
+            std::process::exit(1);
         }
     }
+
+    // TODO: Delegate to subcommand logic once implemented.
 }

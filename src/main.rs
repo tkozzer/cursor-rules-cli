@@ -1,6 +1,6 @@
 use clap::{Parser, Subcommand};
 mod github;
-use tracing_subscriber;
+mod ui;
 
 #[derive(Parser)]
 #[command(
@@ -53,6 +53,10 @@ struct Cli {
     /// Output in JSON format
     #[arg(long)]
     json: bool,
+
+    /// Show hidden files and directories (those starting with dot)
+    #[arg(long)]
+    all: bool,
 }
 
 #[derive(Subcommand)]
@@ -95,12 +99,28 @@ async fn main() {
                 "Resolved repo: {}/{}@{}",
                 locator.owner, locator.repo, locator.branch
             );
+
+            // If no explicit subcommand or `browse`, launch the interactive browser UI.
+            use tokio::sync::mpsc;
+
+            let (tx, _rx) = mpsc::unbounded_channel();
+
+            match cli.command {
+                None | Some(Commands::Browse) => {
+                    if let Err(e) = ui::run(&locator, tx.clone(), cli.all).await {
+                        eprintln!("UI error: {e}");
+                        std::process::exit(1);
+                    }
+                }
+                // Other subcommands will be implemented in future FRs.
+                _ => {
+                    eprintln!("Subcommand not yet implemented");
+                }
+            }
         }
         Err(e) => {
             eprintln!("Error resolving repository: {e}");
             std::process::exit(1);
         }
     }
-
-    // TODO: Delegate to subcommand logic once implemented.
 }

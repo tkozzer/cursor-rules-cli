@@ -141,7 +141,7 @@ fn resolve_owner_interactively() -> Result<String, RepoDiscoveryError> {
                 let _ = Command::new("git")
                     .args(["config", "--global", "user.username", &val])
                     .status();
-                return Ok(val);
+                Ok(val)
             }
             _ => Err(RepoDiscoveryError::OwnerPromptCancelled),
         }

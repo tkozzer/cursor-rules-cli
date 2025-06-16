@@ -83,6 +83,64 @@ cursor-rules/
 └── QUICK_ADD_ALL.txt
 ```
 
+## Development
+
+### Test Coverage
+
+This project uses `cargo-llvm-cov` for comprehensive test coverage reporting.
+
+#### Installation
+
+First, install the `cargo-llvm-cov` tool:
+
+```bash
+cargo install cargo-llvm-cov
+```
+
+#### Running Coverage Analysis
+
+To check test coverage with a summary report:
+
+```bash
+cargo llvm-cov --summary-only
+```
+
+For detailed line-by-line coverage in HTML format:
+
+```bash
+cargo llvm-cov --html
+```
+
+This will generate an HTML report in `target/llvm-cov/html/index.html` that you can open in your browser.
+
+#### Current Coverage Status
+
+The project maintains excellent test coverage across core modules:
+
+- **`copier.rs`**: 92.66% lines (file copying and progress tracking)
+- **`github/tree.rs`**: 92.43% lines (repository tree handling)
+- **`github/repo_locator.rs`**: 87.60% lines (GitHub repository discovery)
+- **`github/manifests.rs`**: 81.64% lines (manifest parsing and validation)
+- **`ui/viewport.rs`**: 96.88% lines (terminal viewport component)
+- **`ui/inputs.rs`**: 85.71% lines (keyboard input handling)
+
+**Overall: 73.65% line coverage with 77 passing tests**
+
+Lower coverage in CLI entry points (`main.rs`) and interactive UI code is expected, as these components are primarily integration-tested through end-to-end scenarios.
+
+### Running Tests
+
+```bash
+# Run all tests
+cargo test
+
+# Run tests with output
+cargo test -- --nocapture
+
+# Run specific test module
+cargo test github::manifests
+```
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.

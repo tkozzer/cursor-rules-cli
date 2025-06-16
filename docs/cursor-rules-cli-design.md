@@ -241,7 +241,7 @@ pub struct Manifest {
 
 | Layer       | Tooling                                                             | Coverage                    |
 | ----------- | ------------------------------------------------------------------- | --------------------------- |
-| Unit        | `cargo test` with `mockito` for GitHub mocks                        | >90% logic crates           |
+| Unit        | `cargo test` with `mockito` for GitHub mocks                        | 73.65% overall, 80%+ core   |
 | Integration | `expectrl` scripted TTY sessions                                    | browse, quick‑add scenarios |
 | E2E (CI)    | Runs against a fixture public repo (`tkozzer/cursor-rules-fixture`) | assures GitHub calls work   |
 | Static      | `cargo audit`, `cargo deny`, supply chain checks                    | every push                  |

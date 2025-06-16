@@ -1,7 +1,8 @@
-use std::{fs, path::PathBuf, process::Command};
+use std::{fs, io, path::PathBuf, process::Command};
 
 use anyhow::Context;
 use inquire::Text;
+use is_terminal::IsTerminal;
 use regex::Regex;
 use thiserror::Error;
 use tracing::{debug, instrument};
@@ -131,7 +132,7 @@ pub async fn resolve_repo(
 }
 
 fn resolve_owner_interactively() -> Result<String, RepoDiscoveryError> {
-    if atty::is(atty::Stream::Stdin) {
+    if io::stdin().is_terminal() {
         let ans = Text::new("GitHub owner to fetch rules from")
             .with_placeholder("GitHub username or org")
             .prompt();
@@ -503,7 +504,7 @@ mod tests {
         #[cfg(unix)]
         std::env::set_var("HOME", tmp_dir.path());
 
-        // Make stdin non-tty so atty::is() returns false (Unix only)
+        // Make stdin non-tty so is_terminal() returns false (Unix only)
         #[cfg(unix)]
         {
             use std::os::unix::io::AsRawFd;

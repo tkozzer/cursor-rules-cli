@@ -277,7 +277,7 @@ async fn download_file_content(
         Some(content) if content.content.is_some() => {
             // Handle base64 encoded content
             let encoded_content = content.content.as_ref().unwrap();
-            let cleaned = encoded_content.replace('\n', "").replace(' ', "");
+            let cleaned = encoded_content.replace(['\n', ' '], "");
 
             base64::engine::general_purpose::STANDARD
                 .decode(cleaned)

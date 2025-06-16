@@ -4,7 +4,27 @@
 [![Documentation](https://docs.rs/cursor-rules/badge.svg)](https://docs.rs/cursor-rules)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+> 🚧 **Development in Progress** - Building toward v0.2.0 stable release
+
 A CLI tool for managing Cursor rules from GitHub repositories.
+
+## 📋 Development Progress
+
+### Core Features
+- ✅ **FR-1: Repository Discovery** - Auto-detect GitHub owner/repo with fallbacks
+- ✅ **FR-2: Interactive Browser** - Terminal UI for browsing repository trees  
+- ✅ **FR-3: Quick-Add Support** - Bulk copy rules via manifest files
+- ⏳ **FR-4: Config & Authentication** - GitHub token management and settings
+- ⏳ **FR-5: Copy Semantics** - File conflict resolution and overwrite handling
+- ⏳ **FR-6: Offline Cache** - Local caching for improved performance
+- ⏳ **FR-7: Telemetry** - Optional usage analytics
+
+### Quality Assurance
+- ⏳ **QA: CI/Testing/Release** - Automated testing and release pipeline
+
+### Version Milestones
+- **v0.1.3**: Quick-add functionality complete ✅ **(Current)**
+- **v0.2.0**: First stable release with all core features **(Target)**
 
 ## Overview
 

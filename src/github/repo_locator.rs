@@ -501,8 +501,12 @@ mod tests {
         std::env::set_var("XDG_CONFIG_HOME", tmp_dir.path());
         #[cfg(unix)]
         let orig_home = std::env::var("HOME").ok();
+        #[cfg(windows)]
+        let orig_home = std::env::var("USERPROFILE").ok();
         #[cfg(unix)]
         std::env::set_var("HOME", tmp_dir.path());
+        #[cfg(windows)]
+        std::env::set_var("USERPROFILE", tmp_dir.path());
 
         // Make stdin non-tty so is_terminal() returns false (Unix only)
         #[cfg(unix)]
@@ -531,10 +535,17 @@ mod tests {
         } else {
             std::env::remove_var("XDG_CONFIG_HOME");
         }
+        #[cfg(unix)]
         if let Some(val) = orig_home {
             std::env::set_var("HOME", val);
         } else {
             std::env::remove_var("HOME");
+        }
+        #[cfg(windows)]
+        if let Some(val) = orig_home {
+            std::env::set_var("USERPROFILE", val);
+        } else {
+            std::env::remove_var("USERPROFILE");
         }
     }
 }

@@ -608,6 +608,14 @@ mod tests {
             let temp_dir = TempDir::new().unwrap();
             env::set_var("HOME", temp_dir.path());
 
+            // Ensure the config directory exists by trying to get the config path first
+            // This triggers directory creation if needed
+            if let Ok(config_path) = config_file_path() {
+                if let Some(parent) = config_path.parent() {
+                    std::fs::create_dir_all(parent).unwrap();
+                }
+            }
+
             // Allow some time between config file operations
             std::thread::sleep(std::time::Duration::from_millis(10));
 
@@ -1118,6 +1126,7 @@ telemetry = true"#,
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_resolve_token_priority_comprehensive() {
         use std::env;
 

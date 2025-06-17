@@ -1,17 +1,25 @@
 use clap::{Parser, Subcommand};
+mod config;
 mod copier;
 mod github;
 mod ui;
 
 use base64::Engine;
+use config::{
+    delete_config_value, load_config, resolve_github_token, update_config_value, Config,
+    KeyringStore, SecretStore,
+};
 use copier::{create_copy_plan, execute_copy_plan, render_copy_plan_table, CopyConfig};
 use github::{find_manifests_in_quickadd, parse_manifest_content, ManifestFormat};
+use inquire::Confirm;
+use is_terminal::IsTerminal;
+use std::io;
 use std::path::PathBuf;
 
 #[derive(Parser)]
 #[command(
     name = "cursor-rules",
-    version = "0.1.1",
+    version = env!("CARGO_PKG_VERSION"),
     author = "Tyler Kozlowski <tkoz.dev@gmail.com>",
     about = "A CLI tool for managing Cursor rules from GitHub repositories",
     long_about = "An interactive, cross-platform Rust CLI that allows developers to browse GitHub repositories named 'cursor-rules' and copy selected .mdc rule files into their projects."
@@ -74,11 +82,24 @@ enum Commands {
     /// Print repo tree in JSON/YAML
     List,
     /// Show or modify saved config
-    Config,
+    Config {
+        #[command(subcommand)]
+        action: Option<ConfigAction>,
+    },
     /// Manage offline cache (list|clear)
     Cache { action: Option<String> },
     /// Generate shell completions
     Completions { shell: String },
+}
+
+#[derive(Subcommand)]
+enum ConfigAction {
+    /// Set a configuration value
+    Set { key: String, value: String },
+    /// Delete a configuration value
+    Delete { key: String },
+    /// Show current configuration
+    Show,
 }
 
 #[tokio::main]
@@ -92,11 +113,38 @@ async fn main() {
             .init();
     }
 
+    // Load config and resolve token using priority system
+    let config = match load_config() {
+        Ok(config) => config,
+        Err(e) => {
+            if cli.verbose {
+                eprintln!("Warning: Failed to load config: {}", e);
+            }
+            Config::default()
+        }
+    };
+
+    let secret_store = KeyringStore;
+    let resolved_token = match resolve_github_token(cli.token.as_deref(), &secret_store) {
+        Ok(token) => token,
+        Err(e) => {
+            if cli.verbose {
+                eprintln!("Warning: Failed to resolve token: {}", e);
+            }
+            None
+        }
+    };
+
+    // Apply config defaults where CLI args are not provided
+    let owner = cli.owner.clone().or(config.owner);
+    let repo = cli.repo.clone().or(config.repo);
+    let out_dir = cli.out.clone().or(config.out_dir);
+
     match github::resolve_repo(
-        cli.owner.clone(),
-        cli.repo.clone(),
+        owner.clone(),
+        repo.clone(),
         cli.branch.clone(),
-        cli.token.clone(),
+        resolved_token.clone(),
     )
     .await
     {
@@ -128,7 +176,7 @@ async fn main() {
                             msg = rx.recv() => {
                                 match msg {
                                     Some(ui::AppMessage::CopyRequest { path }) => {
-                                        if let Err(e) = handle_browser_selection(&locator, &path, &cli).await {
+                                        if let Err(e) = handle_browser_selection(&locator, &path, &cli, out_dir.as_deref()).await {
                                             eprintln!("Copy error: {e}");
                                         }
                                     }
@@ -157,8 +205,14 @@ async fn main() {
                     }
                 }
                 Some(Commands::QuickAdd { ref id }) => {
-                    if let Err(e) = handle_quick_add(&locator, id, &cli).await {
+                    if let Err(e) = handle_quick_add(&locator, id, &cli, out_dir.as_deref()).await {
                         eprintln!("Quick-add error: {e}");
+                        std::process::exit(1);
+                    }
+                }
+                Some(Commands::Config { ref action }) => {
+                    if let Err(e) = handle_config_command(action.as_ref()).await {
+                        eprintln!("Config error: {e}");
                         std::process::exit(1);
                     }
                 }
@@ -175,11 +229,134 @@ async fn main() {
     }
 }
 
+/// Handle config subcommands
+async fn handle_config_command(action: Option<&ConfigAction>) -> anyhow::Result<()> {
+    let secret_store = KeyringStore;
+
+    match action {
+        None | Some(ConfigAction::Show) => {
+            // Show current configuration
+            let config = load_config().map_err(anyhow::Error::from)?;
+            let token = resolve_github_token(None, &secret_store).map_err(anyhow::Error::from)?;
+
+            println!("Current configuration:");
+            println!();
+            println!(
+                "{:<12} {}",
+                "owner:",
+                config.owner.unwrap_or_else(|| "unset".to_string())
+            );
+            println!(
+                "{:<12} {}",
+                "repo:",
+                config.repo.unwrap_or_else(|| "unset".to_string())
+            );
+            println!(
+                "{:<12} {}",
+                "out_dir:",
+                config.out_dir.unwrap_or_else(|| "unset".to_string())
+            );
+            println!(
+                "{:<12} {}",
+                "telemetry:",
+                config
+                    .telemetry
+                    .map_or("unset".to_string(), |t| t.to_string())
+            );
+            println!(
+                "{:<12} {}",
+                "token:",
+                if token.is_some() {
+                    "✓ stored in keyring"
+                } else {
+                    "✗ not set"
+                }
+            );
+
+            // Show config file path
+            let config_path = config::config_file_path().map_err(anyhow::Error::from)?;
+            println!();
+            println!("Config file: {}", config_path.display());
+        }
+        Some(ConfigAction::Set { key, value }) => {
+            if key == "token" {
+                // Special handling for token - store in keyring
+                let confirmation = if io::stdin().is_terminal() {
+                    Confirm::new("Store GitHub token in secure keyring?")
+                        .with_default(true)
+                        .prompt()
+                        .unwrap_or(false)
+                } else {
+                    true // Non-interactive mode, assume yes
+                };
+
+                if confirmation {
+                    secret_store.set_token(value).map_err(anyhow::Error::from)?;
+                    println!("GitHub token stored securely in keyring.");
+
+                    // Validate token by making a test API call
+                    match validate_github_token(value).await {
+                        Ok(()) => println!("✓ Token validation successful."),
+                        Err(e) => {
+                            eprintln!("⚠ Warning: Token validation failed: {}", e);
+                            eprintln!("The token has been stored but may not be valid.");
+                        }
+                    }
+                } else {
+                    println!("Token not stored.");
+                }
+            } else {
+                // Regular config value
+                update_config_value(key, value).map_err(anyhow::Error::from)?;
+                println!("Set {} = {}", key, value);
+            }
+        }
+        Some(ConfigAction::Delete { key }) => {
+            if key == "token" {
+                // Special handling for token - delete from keyring
+                let confirmation = if io::stdin().is_terminal() {
+                    Confirm::new("Delete GitHub token from keyring?")
+                        .with_default(false)
+                        .prompt()
+                        .unwrap_or(false)
+                } else {
+                    false // Non-interactive mode, don't delete without explicit confirmation
+                };
+
+                if confirmation {
+                    secret_store.delete_token().map_err(anyhow::Error::from)?;
+                    println!("GitHub token deleted from keyring.");
+                } else {
+                    println!("Token not deleted.");
+                }
+            } else {
+                // Regular config value
+                delete_config_value(key).map_err(anyhow::Error::from)?;
+                println!("Deleted {}", key);
+            }
+        }
+    }
+
+    Ok(())
+}
+
+/// Validate a GitHub token by making a test API call
+async fn validate_github_token(token: &str) -> anyhow::Result<()> {
+    let octocrab = octocrab::Octocrab::builder()
+        .personal_token(token.to_string())
+        .build()?;
+
+    // Make a simple API call to validate the token
+    let _user = octocrab.current().user().await?;
+    Ok(())
+}
+
 /// Handle the quick-add command
 async fn handle_quick_add(
     locator: &github::RepoLocator,
     manifest_id: &str,
     cli: &Cli,
+    out_dir: Option<&str>,
 ) -> anyhow::Result<()> {
     // Create repo tree and find available manifests in the quick-add directory
     let mut repo_tree = github::RepoTree::new();
@@ -238,9 +415,7 @@ async fn handle_quick_add(
 
     // Create copy configuration
     let copy_config = CopyConfig {
-        output_dir: cli
-            .out
-            .as_ref()
+        output_dir: out_dir
             .map(PathBuf::from)
             .unwrap_or_else(|| PathBuf::from("./.cursor/rules")),
         force_overwrite: cli.force,
@@ -293,6 +468,7 @@ async fn handle_browser_selection(
     locator: &github::RepoLocator,
     file_path: &str,
     cli: &Cli,
+    out_dir: Option<&str>,
 ) -> anyhow::Result<()> {
     use crate::copier::{create_copy_plan, execute_copy_plan, CopyConfig};
 
@@ -311,15 +487,13 @@ async fn handle_browser_selection(
         println!("Applying manifest: {}", manifest_id);
 
         // Use the existing quick-add logic
-        handle_quick_add(locator, manifest_id, cli).await
+        handle_quick_add(locator, manifest_id, cli, out_dir).await
     } else if file_path.ends_with(".mdc") {
         // Single file copy
         println!("Copying file: {}", file_path);
 
         let copy_config = CopyConfig {
-            output_dir: cli
-                .out
-                .as_ref()
+            output_dir: out_dir
                 .map(PathBuf::from)
                 .unwrap_or_else(|| PathBuf::from("./.cursor/rules")),
             force_overwrite: cli.force,

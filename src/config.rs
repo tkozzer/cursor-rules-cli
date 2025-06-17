@@ -512,6 +512,7 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_load_config_nonexistent_file() {
         // This should return default config when file doesn't exist
         // Since we can't control the actual config file location reliably,
@@ -563,6 +564,7 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_update_config_value_telemetry_invalid() {
         use std::env;
         use tempfile::TempDir;
@@ -647,6 +649,7 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_delete_config_value_valid_keys() {
         use std::env;
         use tempfile::TempDir;
@@ -897,6 +900,7 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_update_config_value_all_keys() {
         use std::env;
         use tempfile::TempDir;
@@ -948,6 +952,7 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_delete_config_value_all_keys() {
         use std::env;
         use tempfile::TempDir;

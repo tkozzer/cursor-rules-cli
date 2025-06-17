@@ -12,6 +12,7 @@ use std::time::{Duration, Instant};
 use tokio::sync::mpsc::UnboundedSender;
 
 pub mod inputs;
+pub mod prompts;
 pub mod theme;
 pub mod viewport;
 

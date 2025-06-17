@@ -15,6 +15,7 @@ use inquire::Confirm;
 use is_terminal::IsTerminal;
 use std::io;
 use std::path::PathBuf;
+use ui::prompts::{InteractivePromptService, NonInteractivePromptService, PromptService};
 
 #[derive(Parser)]
 #[command(
@@ -418,7 +419,11 @@ async fn handle_quick_add(
         output_dir: out_dir
             .map(PathBuf::from)
             .unwrap_or_else(|| PathBuf::from("./.cursor/rules")),
-        force_overwrite: cli.force,
+        overwrite_mode: if cli.force {
+            copier::OverwriteMode::Force
+        } else {
+            copier::OverwriteMode::Prompt
+        },
         max_concurrency: 4,
     };
 
@@ -448,7 +453,15 @@ async fn handle_quick_add(
     }
     println!();
 
-    let stats = execute_copy_plan(copy_plan, locator, &copy_config).await?;
+    // Create appropriate prompt service based on CLI flags
+    let prompt_service: Box<dyn PromptService> = if cli.force {
+        Box::new(NonInteractivePromptService::overwrite_all())
+    } else {
+        Box::new(InteractivePromptService::new())
+    };
+
+    let stats =
+        execute_copy_plan(copy_plan, locator, &copy_config, prompt_service.as_ref()).await?;
 
     println!();
     println!("Copy operation completed:");
@@ -471,6 +484,9 @@ async fn handle_browser_selection(
     out_dir: Option<&str>,
 ) -> anyhow::Result<()> {
     use crate::copier::{create_copy_plan, execute_copy_plan, CopyConfig};
+    use crate::ui::prompts::{
+        InteractivePromptService, NonInteractivePromptService, PromptService,
+    };
 
     use std::path::PathBuf;
 
@@ -496,7 +512,11 @@ async fn handle_browser_selection(
             output_dir: out_dir
                 .map(PathBuf::from)
                 .unwrap_or_else(|| PathBuf::from("./.cursor/rules")),
-            force_overwrite: cli.force,
+            overwrite_mode: if cli.force {
+                copier::OverwriteMode::Force
+            } else {
+                copier::OverwriteMode::Prompt
+            },
             max_concurrency: 1,
         };
 
@@ -506,7 +526,16 @@ async fn handle_browser_selection(
         if cli.dry_run {
             println!("Dry-run mode: Would copy {}", file_path);
         } else {
-            let stats = execute_copy_plan(copy_plan, locator, &copy_config).await?;
+            // Create appropriate prompt service based on CLI flags
+            let prompt_service: Box<dyn PromptService> = if cli.force {
+                Box::new(NonInteractivePromptService::overwrite_all())
+            } else {
+                Box::new(InteractivePromptService::new())
+            };
+
+            let stats =
+                execute_copy_plan(copy_plan, locator, &copy_config, prompt_service.as_ref())
+                    .await?;
             println!("Copied {} file(s)", stats.files_copied);
         }
 

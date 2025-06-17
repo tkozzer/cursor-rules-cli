@@ -691,6 +691,7 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_resolve_github_token_empty_env_var() {
         use std::env;
 
@@ -1025,6 +1026,7 @@ out_dir = "/path/with/slashes"
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_environment_variable_edge_cases() {
         use std::env;
 

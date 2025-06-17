@@ -8,10 +8,6 @@ on:
   # Manual trigger capability
   workflow_dispatch:
   
-  # Push to main and preview branches
-  push:
-    branches: [ main, preview ]
-  
   # Pull requests targeting preview (from any dev branch) or main (from preview)
   pull_request:
     branches: [ main, preview ]
@@ -20,6 +16,7 @@ on:
     # - fix-bugs → preview  
     # - feature-auth → preview
     # - preview → main
+    # No redundant CI runs after merge!
 
 env:
   CARGO_TERM_COLOR: always

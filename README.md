@@ -15,7 +15,7 @@ A CLI tool for managing Cursor rules from GitHub repositories.
 - ✅ **FR-2: Interactive Browser** - Terminal UI for browsing repository trees  
 - ✅ **FR-3: Quick-Add Support** - Bulk copy rules via manifest files
 - ✅ **FR-4: Config & Authentication** - GitHub token management and settings
-- ⏳ **FR-5: Copy Semantics** - File conflict resolution and overwrite handling
+- ✅ **FR-5: Copy Semantics** - File conflict resolution and overwrite handling
 - ⏳ **FR-6: Offline Cache** - Local caching for improved performance
 - ⏳ **FR-7: Telemetry** - Optional usage analytics
 
@@ -23,7 +23,8 @@ A CLI tool for managing Cursor rules from GitHub repositories.
 - ⏳ **QA: CI/Testing/Release** - Automated testing and release pipeline
 
 ### Version Milestones
-- **v0.1.4**: Config & authentication complete ✅ **(Current)**
+- **v0.1.4**: Config & authentication complete ✅
+- **v0.1.5**: Copy semantics & file conflict resolution complete ✅ **(Current)**
 - **v0.2.0**: First stable release with all core features **(Target)**
 
 ## Overview
@@ -151,10 +152,11 @@ The project maintains excellent test coverage across core modules:
 - **`ui/viewport.rs`**: 96.88% lines (terminal viewport component)
 - **`ui/inputs.rs`**: 85.71% lines (keyboard input handling)
 - **`github/manifests.rs`**: 81.64% lines (manifest parsing and validation)
-- **`copier.rs`**: 79.06% lines (file copying and progress tracking)
-- **`config.rs`**: 84.51% lines (configuration and authentication) ✨ *New in FR-4*
+- **`copier.rs`**: 82.24% lines (file copying and progress tracking) ✨ *Enhanced in FR-5*
+- **`ui/prompts.rs`**: 81.45% lines (interactive conflict resolution) ✨ *New in FR-5*
+- **`config.rs`**: 84.67% lines (configuration and authentication)
 
-**Overall: 71.92% line coverage with 111 passing tests**
+**Overall: 74.06% line coverage with 140 passing tests**
 
 Lower coverage in CLI entry points (`main.rs`) and interactive UI code is expected, as these components are primarily integration-tested through end-to-end scenarios.
 
@@ -181,18 +183,19 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Development Status
 
-**Current Version: 0.1.4 - Core functionality implemented**
+**Current Version: 0.1.5 - Advanced copy semantics implemented**
 
-FR-4 (Config & Authentication) has been completed with comprehensive test coverage, bringing the project closer to the v0.2.0 stable release target.
+FR-5 (Copy Semantics) has been completed with comprehensive test coverage and enterprise-grade file handling, bringing the project significantly closer to the v0.2.0 stable release target.
 
 ### Recently Implemented
 - ✅ **Interactive repository browsing** - Terminal UI with tree navigation
 - ✅ **Quick-add manifest support** - Bulk rule installation via manifest files  
 - ✅ **GitHub authentication** - Secure token storage with keyring integration
 - ✅ **Configuration management** - Persistent settings with XDG compliance
+- ✅ **Advanced copy semantics** - Atomic file operations, conflict resolution, security validation ✨ *New in FR-5*
+- ✅ **Interactive prompts** - Smart conflict handling with overwrite/skip/rename options ✨ *New in FR-5*
 
 ### Next Priorities
-- ⏳ **Copy semantics** - File conflict resolution and overwrite handling
 - ⏳ **Offline caching** - Local caching for improved performance
 - ⏳ **Telemetry** - Optional usage analytics
 - ⏳ **Shell completions** - Bash, Zsh, Fish support

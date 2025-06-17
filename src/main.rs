@@ -157,7 +157,7 @@ async fn main() {
                     }
                 }
                 Some(Commands::QuickAdd { ref id }) => {
-                    if let Err(e) = handle_quick_add(&locator, &id, &cli).await {
+                    if let Err(e) = handle_quick_add(&locator, id, &cli).await {
                         eprintln!("Quick-add error: {e}");
                         std::process::exit(1);
                     }
@@ -391,7 +391,7 @@ async fn download_manifest_content(
         Some(content) if content.content.is_some() => {
             // Handle base64 encoded content
             let encoded_content = content.content.as_ref().unwrap();
-            let cleaned = encoded_content.replace('\n', "").replace(' ', "");
+            let cleaned = encoded_content.replace(['\n', ' '], "");
             let decoded = base64::engine::general_purpose::STANDARD.decode(cleaned)?;
             let text = String::from_utf8(decoded)?;
             Ok(text)

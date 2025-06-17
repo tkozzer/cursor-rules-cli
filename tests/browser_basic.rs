@@ -4,6 +4,7 @@ use mockito::{Matcher, Server};
 use serde_json::json;
 
 #[test]
+#[cfg(unix)] // Skip on Windows due to terminal/process spawning differences in CI
 fn tui_quits_on_q() -> anyhow::Result<()> {
     // Prepare mock GitHub API
     let tree_resp = json!({

@@ -122,14 +122,14 @@ pub async fn execute_copy_plan(
     repo_locator: &RepoLocator,
     config: &CopyConfig,
 ) -> Result<CopyStats> {
-    if plans.is_empty() {
-        return Ok(CopyStats::default());
-    }
-
-    // Create output directory if it doesn't exist
+    // Create output directory if it doesn't exist (always, even for empty plans)
     fs::create_dir_all(&config.output_dir)
         .await
         .context("Failed to create output directory")?;
+
+    if plans.is_empty() {
+        return Ok(CopyStats::default());
+    }
 
     // Set up progress tracking
     let multi_progress = MultiProgress::new();
@@ -277,7 +277,7 @@ async fn download_file_content(
         Some(content) if content.content.is_some() => {
             // Handle base64 encoded content
             let encoded_content = content.content.as_ref().unwrap();
-            let cleaned = encoded_content.replace('\n', "").replace(' ', "");
+            let cleaned = encoded_content.replace(['\n', ' '], "");
 
             base64::engine::general_purpose::STANDARD
                 .decode(cleaned)
@@ -581,13 +581,9 @@ mod tests {
             max_concurrency: 1,
         };
 
-        // Create a plan that will fail at download (since we don't have a real GitHub API)
-        // but should still create the directory
-        let plans = vec![CopyPlan {
-            source_path: "test.mdc".to_string(),
-            destination_path: output_dir.join("test.mdc"),
-            would_overwrite: false,
-        }];
+        // Test with empty plans - this should still create the output directory
+        // without making any network calls
+        let plans = vec![];
 
         let repo_locator = RepoLocator {
             owner: "test".to_string(),
@@ -595,8 +591,9 @@ mod tests {
             branch: "main".to_string(),
         };
 
-        // This will fail due to GitHub API, but the directory should be created
-        let _result = execute_copy_plan(plans, &repo_locator, &config).await;
+        // Execute with empty plans - should create directory and succeed immediately
+        let result = execute_copy_plan(plans, &repo_locator, &config).await;
+        assert!(result.is_ok());
 
         // Verify the output directory was created
         assert!(output_dir.exists());
@@ -623,9 +620,13 @@ mod tests {
             branch: "main".to_string(),
         };
 
+        // Create a mock octocrab instance - this test only checks the skip behavior
+        // so it should return false before any network calls are made
         let octocrab = Arc::new(octocrab::instance());
 
         // Should skip the file since force_overwrite is false
+        // This will return early without making network calls because the file exists
+        // and force_overwrite is false
         let result = copy_single_file(&plan, &repo_locator, false, &octocrab)
             .await
             .unwrap();

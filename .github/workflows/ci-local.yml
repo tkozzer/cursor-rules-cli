@@ -1,25 +1,38 @@
 name: CI Local
 
+# 🏠 LOCAL DEVELOPMENT ONLY
+# This workflow is designed exclusively for local testing using `act`.
+# It will NOT run on GitHub servers due to the ACT environment checks.
+# 
+# Usage: act workflow_dispatch -W .github/workflows/ci-local.yml
+
 on:
-  # Manual trigger capability for local testing
+  # Only manual trigger - designed for local testing with `act`
   workflow_dispatch:
-  
-  # Push to main and preview branches (for local git testing)
-  push:
-    branches: [ main, preview ]
-  
-  # Pull requests targeting preview or main (for local testing)
-  pull_request:
-    branches: [ main, preview ]
 
 env:
   CARGO_TERM_COLOR: always
   RUST_BACKTRACE: 1
 
 jobs:
+  # Warning job that runs on GitHub to inform about local-only nature
+  github-warning:
+    name: ⚠️ Local Development Only
+    runs-on: ubuntu-latest
+    if: ${{ !env.ACT }}
+    steps:
+      - name: Warning message
+        run: |
+          echo "::warning::This workflow is designed for local development only using 'act'."
+          echo "::warning::It should not be run on GitHub's servers."
+          echo "::notice::To run locally: act workflow_dispatch -W .github/workflows/ci-local.yml"
+          exit 0
+
   check:
     name: Check
     runs-on: ubuntu-latest
+    # Only run when using `act` locally, not on GitHub
+    if: ${{ env.ACT }}
     steps:
       - name: Checkout sources
         uses: actions/checkout@v4
@@ -33,6 +46,8 @@ jobs:
   test:
     name: Test Suite
     runs-on: ${{ matrix.os }}
+    # Only run when using `act` locally, not on GitHub
+    if: ${{ env.ACT }}
     strategy:
       matrix:
         os: [ubuntu-latest]
@@ -63,6 +78,8 @@ jobs:
   coverage:
     name: Code Coverage
     runs-on: ubuntu-latest
+    # Only run when using `act` locally, not on GitHub
+    if: ${{ env.ACT }}
     steps:
       - name: Checkout sources
         uses: actions/checkout@v4
@@ -95,6 +112,8 @@ jobs:
   fmt:
     name: Rustfmt
     runs-on: ubuntu-latest
+    # Only run when using `act` locally, not on GitHub
+    if: ${{ env.ACT }}
     steps:
       - name: Checkout sources
         uses: actions/checkout@v4
@@ -110,6 +129,8 @@ jobs:
   clippy:
     name: Clippy
     runs-on: ubuntu-latest
+    # Only run when using `act` locally, not on GitHub
+    if: ${{ env.ACT }}
     steps:
       - name: Checkout sources
         uses: actions/checkout@v4
@@ -134,6 +155,8 @@ jobs:
   security_audit:
     name: Security Audit
     runs-on: ubuntu-latest
+    # Only run when using `act` locally, not on GitHub
+    if: ${{ env.ACT }}
     steps:
       - name: Checkout sources
         uses: actions/checkout@v4
@@ -147,6 +170,8 @@ jobs:
   msrv:
     name: Minimum Supported Rust Version
     runs-on: ubuntu-latest
+    # Only run when using `act` locally, not on GitHub
+    if: ${{ env.ACT }}
     steps:
       - name: Checkout sources
         uses: actions/checkout@v4
@@ -171,6 +196,8 @@ jobs:
   docs:
     name: Documentation
     runs-on: ubuntu-latest
+    # Only run when using `act` locally, not on GitHub
+    if: ${{ env.ACT }}
     steps:
       - name: Checkout sources
         uses: actions/checkout@v4
@@ -193,7 +220,8 @@ jobs:
   # This job ensures all CI jobs pass
   ci:
     name: CI
-    if: always()
+    # Only run when using `act` locally, not on GitHub
+    if: ${{ env.ACT && always() }}
     needs:
       - check
       - test

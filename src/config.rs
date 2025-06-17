@@ -352,27 +352,44 @@ mod tests {
     #[test]
     #[serial_test::serial]
     fn test_token_resolution_priority() {
-        let mock_store = MockSecretStore::new();
+        use std::env;
 
-        // Store a token in the mock keyring
+        // Save original env var state
+        let original_token = env::var("GITHUB_TOKEN").ok();
+
+        // Test 1: CLI token has highest priority (with fresh mock store)
+        let mock_store = MockSecretStore::new();
+        env::set_var("GITHUB_TOKEN", "env_token");
         mock_store.set_token("keyring_token").unwrap();
 
-        // CLI token should have highest priority
         let result = resolve_github_token(Some("cli_token"), &mock_store).unwrap();
         assert_eq!(result, Some("cli_token".to_string()));
 
-        // Keyring token should be used when no CLI token
-        let result = resolve_github_token(None, &mock_store).unwrap();
-        assert_eq!(result, Some("keyring_token".to_string()));
-
-        // Clear keyring and test env var
-        mock_store.delete_token().unwrap();
-        std::env::set_var("GITHUB_TOKEN", "env_token");
+        // Test 2: Environment variable when no CLI token (with fresh mock store)
+        let mock_store = MockSecretStore::new();
+        mock_store.set_token("keyring_token").unwrap();
+        env::set_var("GITHUB_TOKEN", "env_token");
         let result = resolve_github_token(None, &mock_store).unwrap();
         assert_eq!(result, Some("env_token".to_string()));
 
-        // Clean up
-        std::env::remove_var("GITHUB_TOKEN");
+        // Test 3: Keyring when no CLI token or env var (with fresh mock store)
+        let mock_store = MockSecretStore::new();
+        mock_store.set_token("keyring_token").unwrap();
+        env::remove_var("GITHUB_TOKEN");
+        let result = resolve_github_token(None, &mock_store).unwrap();
+        assert_eq!(result, Some("keyring_token".to_string()));
+
+        // Test 4: None when no sources available (with fresh mock store)
+        let mock_store = MockSecretStore::new();
+        env::remove_var("GITHUB_TOKEN");
+        let result = resolve_github_token(None, &mock_store).unwrap();
+        assert!(result.is_none());
+
+        // Restore original state
+        match original_token {
+            Some(token) => env::set_var("GITHUB_TOKEN", token),
+            None => env::remove_var("GITHUB_TOKEN"),
+        }
     }
 
     #[test]
@@ -571,23 +588,28 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_update_config_value_valid_keys() {
         use std::env;
         use tempfile::TempDir;
 
         let original_home = env::var("HOME").ok();
 
-        // Test each value in a separate environment
+        // Test each value in a completely separate environment
         let test_cases = vec![
             ("telemetry", "true"),
             ("owner", "test-owner"),
             ("repo", "test-repo"),
-            ("out_dir", "./test/path"), // Use relative path
+            ("out_dir", "./test/path"),
         ];
 
         for (key, value) in test_cases {
+            // Use a fresh temp directory for each test case
             let temp_dir = TempDir::new().unwrap();
             env::set_var("HOME", temp_dir.path());
+
+            // Allow some time between config file operations
+            std::thread::sleep(std::time::Duration::from_millis(10));
 
             let result = update_config_value(key, value);
             assert!(
@@ -596,6 +618,17 @@ mod tests {
                 key,
                 result.err()
             );
+
+            // Verify the value was actually saved by loading it back
+            if let Ok(config) = load_config() {
+                match key {
+                    "telemetry" => assert_eq!(config.telemetry, Some(value == "true")),
+                    "owner" => assert_eq!(config.owner, Some(value.to_string())),
+                    "repo" => assert_eq!(config.repo, Some(value.to_string())),
+                    "out_dir" => assert_eq!(config.out_dir, Some(value.to_string())),
+                    _ => unreachable!(),
+                }
+            }
         }
 
         // Restore HOME
@@ -765,13 +798,14 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_resolve_github_token_all_paths() {
         use std::env;
 
         // Save original env var state
         let original_token = env::var("GITHUB_TOKEN").ok();
 
-        // Test 1: CLI token takes precedence
+        // Test 1: CLI token takes precedence (with isolated mock store)
         let mock_store = MockSecretStore::new();
         env::set_var("GITHUB_TOKEN", "env_token");
         mock_store.set_token("keyring_token").unwrap();
@@ -779,21 +813,21 @@ mod tests {
         let result = resolve_github_token(Some("cli_token"), &mock_store).unwrap();
         assert_eq!(result, Some("cli_token".to_string()));
 
-        // Test 2: Environment variable when no CLI token
+        // Test 2: Environment variable when no CLI token (with fresh mock store)
         let mock_store = MockSecretStore::new();
         mock_store.set_token("keyring_token").unwrap();
         env::set_var("GITHUB_TOKEN", "env_token");
         let result = resolve_github_token(None, &mock_store).unwrap();
         assert_eq!(result, Some("env_token".to_string()));
 
-        // Test 3: Keyring when no CLI token or env var
+        // Test 3: Keyring when no CLI token or env var (with fresh mock store)
         let mock_store = MockSecretStore::new();
         mock_store.set_token("keyring_token").unwrap();
         env::remove_var("GITHUB_TOKEN");
         let result = resolve_github_token(None, &mock_store).unwrap();
         assert_eq!(result, Some("keyring_token".to_string()));
 
-        // Test 4: None when no sources available
+        // Test 4: None when no sources available (with fresh mock store)
         let mock_store = MockSecretStore::new();
         env::remove_var("GITHUB_TOKEN");
         let result = resolve_github_token(None, &mock_store).unwrap();

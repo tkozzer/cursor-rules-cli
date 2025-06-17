@@ -348,7 +348,7 @@ mod tests {
 
         let script_content = if cfg!(windows) {
             // Simple batch script that echoes argument similar to `git config --get user.username`
-            "@echo off\necho johndoe"
+            "@echo off\r\necho johndoe\r\n"
         } else {
             "#!/usr/bin/env sh\necho johndoe"
         };
@@ -365,7 +365,8 @@ mod tests {
 
         // Prepend temp bin dir to PATH
         let orig_path = std::env::var("PATH").unwrap_or_default();
-        let new_path = format!("{}:{}", bin_dir.display(), orig_path);
+        let path_separator = if cfg!(windows) { ";" } else { ":" };
+        let new_path = format!("{}{}{}", bin_dir.display(), path_separator, orig_path);
         std::env::set_var("PATH", &new_path);
 
         let val = super::git_config_username();
@@ -406,7 +407,7 @@ mod tests {
         let bin_dir = tmp_dir.path();
         let git_path = bin_dir.join(if cfg!(windows) { "git.cmd" } else { "git" });
         let script = if cfg!(windows) {
-            "@echo off\necho John Doe"
+            "@echo off\r\necho John Doe\r\n"
         } else {
             "#!/usr/bin/env sh\necho John Doe"
         };
@@ -417,7 +418,11 @@ mod tests {
             std::fs::set_permissions(&git_path, std::fs::Permissions::from_mode(0o755)).unwrap();
         }
         let orig_path = std::env::var("PATH").unwrap_or_default();
-        std::env::set_var("PATH", format!("{}:{}", bin_dir.display(), orig_path));
+        let path_separator = if cfg!(windows) { ";" } else { ":" };
+        std::env::set_var(
+            "PATH",
+            format!("{}{}{}", bin_dir.display(), path_separator, orig_path),
+        );
 
         let mut server = mockito::Server::new_async().await;
         server

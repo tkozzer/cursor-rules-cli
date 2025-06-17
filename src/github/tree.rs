@@ -458,33 +458,43 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn populate_cache_integration_test() {
-        // This test exercises the actual populate_cache method
-        // It will fail if no OCTO_BASE is set, but that's expected in CI
+    async fn populate_cache_without_network() {
+        // This test exercises the cache logic without making real network calls
         let locator = RepoLocator {
-            owner: "nonexistent".into(),
+            owner: "test".into(),
             repo: "repo".into(),
             branch: "main".into(),
         };
 
         let mut tree = RepoTree::new();
 
-        // This should either succeed (if we have a real GitHub connection)
-        // or fail gracefully (if we don't), but either way it exercises the code path
-        let result = tree.children(&locator, "").await;
+        // Manually populate cache to simulate what populate_cache would do
+        // without making actual GitHub API calls
+        tree.cache.insert(
+            String::new(),
+            vec![
+                RepoNode {
+                    name: "src".into(),
+                    path: "src".into(),
+                    kind: NodeKind::Dir,
+                    children: None,
+                    manifest_count: None,
+                },
+                RepoNode {
+                    name: "README.mdc".into(),
+                    path: "README.mdc".into(),
+                    kind: NodeKind::RuleFile,
+                    children: None,
+                    manifest_count: None,
+                },
+            ],
+        );
 
-        // We don't assert success/failure since this depends on network
-        // The important thing is that the code path is exercised
-        match result {
-            Ok(_) => {
-                // If it succeeds, cache should be populated
-                assert!(!tree.cache.is_empty());
-            }
-            Err(_) => {
-                // If it fails, that's expected for nonexistent repo
-                // The important thing is we exercised the error handling path
-            }
-        }
+        // Test that children() returns cached data
+        let result = tree.children(&locator, "").await.unwrap();
+        assert_eq!(result.len(), 2);
+        assert_eq!(result[0].name, "src");
+        assert_eq!(result[1].name, "README.mdc");
     }
 
     #[test]

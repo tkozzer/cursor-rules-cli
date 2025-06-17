@@ -14,7 +14,7 @@ A CLI tool for managing Cursor rules from GitHub repositories.
 - ✅ **FR-1: Repository Discovery** - Auto-detect GitHub owner/repo with fallbacks
 - ✅ **FR-2: Interactive Browser** - Terminal UI for browsing repository trees  
 - ✅ **FR-3: Quick-Add Support** - Bulk copy rules via manifest files
-- ⏳ **FR-4: Config & Authentication** - GitHub token management and settings
+- ✅ **FR-4: Config & Authentication** - GitHub token management and settings
 - ⏳ **FR-5: Copy Semantics** - File conflict resolution and overwrite handling
 - ⏳ **FR-6: Offline Cache** - Local caching for improved performance
 - ⏳ **FR-7: Telemetry** - Optional usage analytics
@@ -23,7 +23,7 @@ A CLI tool for managing Cursor rules from GitHub repositories.
 - ⏳ **QA: CI/Testing/Release** - Automated testing and release pipeline
 
 ### Version Milestones
-- **v0.1.3**: Quick-add functionality complete ✅ **(Current)**
+- **v0.1.4**: Config & authentication complete ✅ **(Current)**
 - **v0.2.0**: First stable release with all core features **(Target)**
 
 ## Overview
@@ -62,6 +62,12 @@ cursor-rules quick-add QUICK_ADD_ALL.txt --owner myorg
 
 # List available rules
 cursor-rules list --owner myorg
+
+# Configuration management
+cursor-rules config                          # Show current config
+cursor-rules config set owner myorg         # Set default owner
+cursor-rules config set token ghp_xyz123    # Store GitHub token securely
+cursor-rules config delete owner            # Remove config value
 ```
 
 ### Commands
@@ -70,8 +76,11 @@ cursor-rules list --owner myorg
 - `quick-add <ID>` - Apply a manifest (ID = filename or friendly slug)
 - `list` - Print repo tree in JSON/YAML
 - `config` - Show or modify saved config
-- `cache` - Manage offline cache (list|clear)
-- `completions` - Generate shell completions
+  - `config` - Display current configuration
+  - `config set <key> <value>` - Set configuration value
+  - `config delete <key>` - Remove configuration value
+- `cache` - Manage offline cache (list|clear) *(coming soon)*
+- `completions` - Generate shell completions *(coming soon)*
 
 ### Options
 
@@ -137,14 +146,15 @@ This will generate an HTML report in `target/llvm-cov/html/index.html` that you 
 
 The project maintains excellent test coverage across core modules:
 
-- **`copier.rs`**: 92.66% lines (file copying and progress tracking)
-- **`github/tree.rs`**: 92.43% lines (repository tree handling)
-- **`github/repo_locator.rs`**: 87.60% lines (GitHub repository discovery)
-- **`github/manifests.rs`**: 81.64% lines (manifest parsing and validation)
+- **`github/tree.rs`**: 90.94% lines (repository tree handling)
+- **`github/repo_locator.rs`**: 88.13% lines (GitHub repository discovery)  
 - **`ui/viewport.rs`**: 96.88% lines (terminal viewport component)
 - **`ui/inputs.rs`**: 85.71% lines (keyboard input handling)
+- **`github/manifests.rs`**: 81.64% lines (manifest parsing and validation)
+- **`copier.rs`**: 79.06% lines (file copying and progress tracking)
+- **`config.rs`**: 84.51% lines (configuration and authentication) ✨ *New in FR-4*
 
-**Overall: 73.65% line coverage with 77 passing tests**
+**Overall: 71.92% line coverage with 111 passing tests**
 
 Lower coverage in CLI entry points (`main.rs`) and interactive UI code is expected, as these components are primarily integration-tested through end-to-end scenarios.
 
@@ -171,17 +181,20 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Development Status
 
-This is currently a barebones implementation. Full functionality is coming soon!
+**Current Version: 0.1.4 - Core functionality implemented**
 
-**Current Version: 0.1.1 - Basic CLI structure only**
+FR-4 (Config & Authentication) has been completed with comprehensive test coverage, bringing the project closer to the v0.2.0 stable release target.
 
-### Planned Features
+### Recently Implemented
+- ✅ **Interactive repository browsing** - Terminal UI with tree navigation
+- ✅ **Quick-add manifest support** - Bulk rule installation via manifest files  
+- ✅ **GitHub authentication** - Secure token storage with keyring integration
+- ✅ **Configuration management** - Persistent settings with XDG compliance
 
-- Interactive repository browsing
-- Quick-add manifest support
-- GitHub authentication
-- Offline caching
-- Shell completions
-- And much more!
+### Next Priorities
+- ⏳ **Copy semantics** - File conflict resolution and overwrite handling
+- ⏳ **Offline caching** - Local caching for improved performance
+- ⏳ **Telemetry** - Optional usage analytics
+- ⏳ **Shell completions** - Bash, Zsh, Fish support
 
-Stay tuned for updates! 
+The CLI now provides a robust foundation for managing Cursor rules across projects! 

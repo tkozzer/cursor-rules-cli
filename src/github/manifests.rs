@@ -12,12 +12,15 @@ use super::{RepoLocator, RepoTree};
 /// Error types for manifest parsing and validation
 #[derive(Error, Debug)]
 pub enum ManifestError {
+    #[allow(dead_code)]
     #[error("Invalid file format: {0}")]
     InvalidFormat(String),
     #[error("Parse error: {0}")]
     ParseError(String),
+    #[allow(dead_code)]
     #[error("Validation error: {0}")]
     ValidationError(String),
+    #[allow(dead_code)]
     #[error("File not found: {0}")]
     FileNotFound(String),
 }
@@ -174,7 +177,7 @@ async fn file_exists_in_repo(
     let children = repo_tree.children(locator, dir_path).await?;
 
     // Check if the file exists in the directory
-    let _file_name = file_path.split('/').last().unwrap_or("");
+    let _file_name = file_path.split('/').next_back().unwrap_or("");
     for child in children {
         if child.path == file_path {
             return Ok(true);
@@ -222,9 +225,8 @@ pub async fn parse_manifest_content(
 }
 
 /// Helper functions
-
 fn get_manifest_format(filename: &str) -> Option<ManifestFormat> {
-    if let Some(ext) = filename.split('.').last() {
+    if let Some(ext) = filename.split('.').next_back() {
         ManifestFormat::from_extension(ext)
     } else {
         None
@@ -528,7 +530,7 @@ invalid yaml: [unclosed
     #[test]
     fn test_manifest_format_edge_cases() {
         // Test all format priority combinations
-        let formats = vec![
+        let formats = [
             ManifestFormat::Txt,
             ManifestFormat::Yaml,
             ManifestFormat::Json,

@@ -452,21 +452,28 @@ async fn copy_single_file_enhanced(
     repo_locator: &RepoLocator,
     octocrab: &Arc<octocrab::Octocrab>,
 ) -> Result<CopyResult> {
-    // Handle conflicts based on the plan's action
-    match &plan.action {
-        CopyAction::Skip => return Ok(CopyResult::Skipped),
-        CopyAction::Copy | CopyAction::Overwrite => {
-            // Proceed with normal copy
-        }
-        CopyAction::Rename(new_name) => {
-            // Use the renamed destination
-            let final_destination = plan
-                .destination_path
-                .parent()
-                .unwrap_or_else(|| Path::new("."))
-                .join(new_name);
+    use crate::github::cache::{FileSystemCache, PersistentCache};
 
-            // Download and copy with atomic writes
+    // Skip if action is Skip
+    if plan.action == CopyAction::Skip {
+        return Ok(CopyResult::Skipped);
+    }
+
+    // Calculate content SHA for cache key (simple hash of the file path)
+    let content_sha = {
+        use sha1::{Digest, Sha1};
+        let mut hasher = Sha1::new();
+        hasher.update(format!("{}/{}", repo_locator.repo, plan.source_path).as_bytes());
+        format!("{:x}", hasher.finalize())
+    };
+
+    // Try to get content from cache first
+    let file_content = if let Ok(cache) = FileSystemCache::new() {
+        if let Ok(Some(cached_content)) = cache.get_blob_cache(&content_sha).await {
+            // Found in cache, use it
+            cached_content.into_bytes()
+        } else {
+            // Not in cache, download and cache it
             let content = download_file_content(
                 octocrab,
                 &repo_locator.owner,
@@ -476,68 +483,64 @@ async fn copy_single_file_enhanced(
             )
             .await?;
 
-            // Ensure parent directory exists
-            if let Some(parent) = final_destination.parent() {
-                fs::create_dir_all(parent)
-                    .await
-                    .context("Failed to create parent directories")?;
+            // Store in cache for future use
+            if let Ok(content_str) = String::from_utf8(content.clone()) {
+                let _ = cache.store_blob_cache(&content_sha, &content_str).await;
             }
 
-            // Use atomic write: write to temp file, then rename
-            let temp_file =
-                NamedTempFile::new_in(final_destination.parent().unwrap_or_else(|| Path::new(".")))
-                    .context("Failed to create temporary file")?;
-
-            // Write content to temp file
-            fs::write(temp_file.path(), &content)
-                .await
-                .context("Failed to write to temporary file")?;
-
-            // Atomically move temp file to final destination
-            temp_file
-                .persist(&final_destination)
-                .context("Failed to move temporary file to destination")?;
-
-            return Ok(CopyResult::Renamed(new_name.clone()));
+            content
         }
-    }
+    } else {
+        // Cache unavailable, download directly
+        download_file_content(
+            octocrab,
+            &repo_locator.owner,
+            &repo_locator.repo,
+            &plan.source_path,
+            &repo_locator.branch,
+        )
+        .await?
+    };
 
-    // For Copy and Overwrite actions, use original destination
-    let content = download_file_content(
-        octocrab,
-        &repo_locator.owner,
-        &repo_locator.repo,
-        &plan.source_path,
-        &repo_locator.branch,
-    )
-    .await?;
+    // Handle file writing based on action
+    let final_path = match &plan.action {
+        CopyAction::Copy | CopyAction::Overwrite => plan.destination_path.clone(),
+        CopyAction::Rename(new_name) => {
+            let parent = plan
+                .destination_path
+                .parent()
+                .unwrap_or_else(|| Path::new("."));
+            parent.join(new_name)
+        }
+        CopyAction::Skip => return Ok(CopyResult::Skipped),
+    };
 
     // Ensure parent directory exists
-    if let Some(parent) = plan.destination_path.parent() {
+    if let Some(parent) = final_path.parent() {
         fs::create_dir_all(parent)
             .await
-            .context("Failed to create parent directories")?;
+            .with_context(|| format!("Failed to create directory {}", parent.display()))?;
     }
 
-    // Use atomic write: write to temp file, then rename
-    let temp_file = NamedTempFile::new_in(
-        plan.destination_path
-            .parent()
-            .unwrap_or_else(|| Path::new(".")),
-    )
-    .context("Failed to create temporary file")?;
+    // Write to temporary file first for atomic operation
+    let temp_file = NamedTempFile::new_in(final_path.parent().unwrap_or_else(|| Path::new(".")))
+        .context("Failed to create temporary file")?;
 
-    // Write content to temp file
-    fs::write(temp_file.path(), &content)
+    fs::write(temp_file.path(), &file_content)
         .await
-        .context("Failed to write to temporary file")?;
+        .context("Failed to write content to temporary file")?;
 
-    // Atomically move temp file to final destination
+    // Atomically move to final location
     temp_file
-        .persist(&plan.destination_path)
-        .context("Failed to move temporary file to destination")?;
+        .persist(&final_path)
+        .with_context(|| format!("Failed to move temporary file to {}", final_path.display()))?;
 
-    Ok(CopyResult::Copied)
+    // Return appropriate result
+    match &plan.action {
+        CopyAction::Copy | CopyAction::Overwrite => Ok(CopyResult::Copied),
+        CopyAction::Rename(new_name) => Ok(CopyResult::Renamed(new_name.clone())),
+        CopyAction::Skip => Ok(CopyResult::Skipped),
+    }
 }
 
 /// Download file content from GitHub repository

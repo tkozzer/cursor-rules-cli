@@ -16,7 +16,7 @@ A CLI tool for managing Cursor rules from GitHub repositories.
 - ✅ **FR-3: Quick-Add Support** - Bulk copy rules via manifest files
 - ✅ **FR-4: Config & Authentication** - GitHub token management and settings
 - ✅ **FR-5: Copy Semantics** - File conflict resolution and overwrite handling
-- ⏳ **FR-6: Offline Cache** - Local caching for improved performance
+- ✅ **FR-6: Offline Cache** - Local caching for improved performance ✨ *Complete*
 - ⏳ **FR-7: Telemetry** - Optional usage analytics
 
 ### Quality Assurance
@@ -24,8 +24,9 @@ A CLI tool for managing Cursor rules from GitHub repositories.
 
 ### Version Milestones
 - **v0.1.4**: Config & authentication complete ✅
-- **v0.1.5**: Copy semantics & file conflict resolution complete ✅ **(Current)**
-- **v0.2.0**: First stable release with all core features **(Target)**
+- **v0.1.5**: Copy semantics & file conflict resolution complete ✅
+- **v0.1.6**: Offline cache & code quality improvements complete ✅ **(Current)**
+- **v0.2.0**: First stable release with all core features **(Target - 1 feature remaining)**
 
 ## Overview
 
@@ -69,6 +70,11 @@ cursor-rules config                          # Show current config
 cursor-rules config set owner myorg         # Set default owner
 cursor-rules config set token ghp_xyz123    # Store GitHub token securely
 cursor-rules config delete owner            # Remove config value
+
+# Cache management (offline support)
+cursor-rules cache list                     # List all cached repositories
+cursor-rules cache clear                    # Clear all cached data
+cursor-rules --refresh browse               # Force refresh cache
 ```
 
 ### Commands
@@ -80,7 +86,7 @@ cursor-rules config delete owner            # Remove config value
   - `config` - Display current configuration
   - `config set <key> <value>` - Set configuration value
   - `config delete <key>` - Remove configuration value
-- `cache` - Manage offline cache (list|clear) *(coming soon)*
+- `cache` - Manage offline cache (list|clear)
 - `completions` - Generate shell completions *(coming soon)*
 
 ### Options
@@ -92,6 +98,7 @@ cursor-rules config delete owner            # Remove config value
 - `--dry-run` - Show what would be done without making changes
 - `--force` - Force overwrite without prompting
 - `--verbose, -v` - Verbose output
+- `--refresh` - Force refresh cache and bypass local data
 
 ## Repository Structure
 
@@ -147,16 +154,17 @@ This will generate an HTML report in `target/llvm-cov/html/index.html` that you 
 
 The project maintains excellent test coverage across core modules:
 
-- **`github/tree.rs`**: 90.94% lines (repository tree handling)
-- **`github/repo_locator.rs`**: 88.13% lines (GitHub repository discovery)  
-- **`ui/viewport.rs`**: 96.88% lines (terminal viewport component)
-- **`ui/inputs.rs`**: 85.71% lines (keyboard input handling)
-- **`github/manifests.rs`**: 81.64% lines (manifest parsing and validation)
-- **`copier.rs`**: 82.24% lines (file copying and progress tracking) ✨ *Enhanced in FR-5*
+- **`ui/viewport.rs`**: 96.88% lines (terminal viewport component) ⭐
+- **`github/cache.rs`**: 92.45% lines (persistent caching system) ✨ *Complete in FR-6*
+- **`github/repo_locator.rs`**: 88.13% lines (GitHub repository discovery) ⭐
+- **`ui/inputs.rs`**: 85.71% lines (keyboard input handling) ⭐
+- **`config.rs`**: 84.67% lines (configuration and authentication) ⭐
+- **`copier.rs`**: 82.37% lines (file copying and progress tracking) ✨ *Enhanced in FR-5*
+- **`github/tree.rs`**: 82.13% lines (repository tree handling) ✨ *Enhanced in FR-6*
 - **`ui/prompts.rs`**: 81.45% lines (interactive conflict resolution) ✨ *New in FR-5*
-- **`config.rs`**: 84.67% lines (configuration and authentication)
+- **`github/manifests.rs`**: 80.57% lines (manifest parsing and validation) ⭐
 
-**Overall: 74.06% line coverage with 140 passing tests**
+**Overall: 75.73% line coverage with 164 passing tests (163 unit + 1 integration)**
 
 Lower coverage in CLI entry points (`main.rs`) and interactive UI code is expected, as these components are primarily integration-tested through end-to-end scenarios.
 
@@ -183,21 +191,24 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Development Status
 
-**Current Version: 0.1.5 - Advanced copy semantics implemented**
+**Current Version: 0.1.6 - Offline caching and code quality improvements**
 
-FR-5 (Copy Semantics) has been completed with comprehensive test coverage and enterprise-grade file handling, bringing the project significantly closer to the v0.2.0 stable release target.
+FR-6 (Offline Cache) has been completed with exceptional test coverage and production-ready caching infrastructure. The project is now very close to the v0.2.0 stable release with only telemetry remaining.
 
 ### Recently Implemented
 - ✅ **Interactive repository browsing** - Terminal UI with tree navigation
 - ✅ **Quick-add manifest support** - Bulk rule installation via manifest files  
 - ✅ **GitHub authentication** - Secure token storage with keyring integration
 - ✅ **Configuration management** - Persistent settings with XDG compliance
-- ✅ **Advanced copy semantics** - Atomic file operations, conflict resolution, security validation ✨ *New in FR-5*
-- ✅ **Interactive prompts** - Smart conflict handling with overwrite/skip/rename options ✨ *New in FR-5*
+- ✅ **Advanced copy semantics** - Atomic file operations, conflict resolution, security validation ✨ *FR-5*
+- ✅ **Interactive prompts** - Smart conflict handling with overwrite/skip/rename options ✨ *FR-5*
+- ✅ **Offline caching system** - Local repository tree and blob caching with XDG compliance ✨ *FR-6*
+- ✅ **Cache management** - List, clear, and refresh cached repositories ✨ *FR-6*
+- ✅ **Rate limit handling** - Smart GitHub API rate limiting with exponential backoff ✨ *FR-6*
 
 ### Next Priorities
-- ⏳ **Offline caching** - Local caching for improved performance
-- ⏳ **Telemetry** - Optional usage analytics
+- ⏳ **Telemetry** - Optional usage analytics *(Final feature for v0.2.0)*
 - ⏳ **Shell completions** - Bash, Zsh, Fish support
+- ⏳ **Release automation** - CI/CD pipeline for stable releases
 
-The CLI now provides a robust foundation for managing Cursor rules across projects! 
+The CLI now provides a robust, production-ready foundation for managing Cursor rules across projects with comprehensive caching and excellent performance! 

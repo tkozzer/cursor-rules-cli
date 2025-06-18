@@ -17,6 +17,8 @@ use std::io;
 use std::path::PathBuf;
 use ui::prompts::{InteractivePromptService, NonInteractivePromptService, PromptService};
 
+use anyhow::Context;
+
 #[derive(Parser)]
 #[command(
     name = "cursor-rules",
@@ -217,6 +219,12 @@ async fn main() {
                         std::process::exit(1);
                     }
                 }
+                Some(Commands::Cache { ref action }) => {
+                    if let Err(e) = handle_cache_command(action.as_deref()).await {
+                        eprintln!("Cache error: {e}");
+                        std::process::exit(1);
+                    }
+                }
                 // Other subcommands will be implemented in future FRs.
                 _ => {
                     eprintln!("Subcommand not yet implemented");
@@ -341,6 +349,77 @@ async fn handle_config_command(action: Option<&ConfigAction>) -> anyhow::Result<
     Ok(())
 }
 
+/// Handle cache subcommands
+async fn handle_cache_command(action: Option<&str>) -> anyhow::Result<()> {
+    use github::{FileSystemCache, PersistentCache};
+
+    let cache = FileSystemCache::new()?;
+
+    match action {
+        None | Some("list") => {
+            // List all cached repositories
+            let repos = cache.list_cached_repos()?;
+
+            if repos.is_empty() {
+                println!("No cached repositories found.");
+                return Ok(());
+            }
+
+            println!("Cached repositories:");
+            println!();
+
+            for (owner, repo, fetched_at) in repos {
+                let age = chrono::Utc::now().signed_duration_since(fetched_at);
+                let age_str = if age.num_hours() < 1 {
+                    format!("{}m ago", age.num_minutes())
+                } else if age.num_days() < 1 {
+                    format!("{}h ago", age.num_hours())
+                } else {
+                    format!("{}d ago", age.num_days())
+                };
+
+                println!("  {}/{} (cached {})", owner, repo, age_str);
+            }
+        }
+        Some("clear") => {
+            // Clear all cache
+            let cache_dir = github::cache::get_cache_directory()?;
+
+            if !cache_dir.exists() {
+                println!("Cache directory does not exist.");
+                return Ok(());
+            }
+
+            // Get confirmation
+            let confirmation = if is_terminal::IsTerminal::is_terminal(&std::io::stdin()) {
+                inquire::Confirm::new("Clear all cached repositories?")
+                    .with_default(false)
+                    .prompt()
+                    .unwrap_or(false)
+            } else {
+                false // Non-interactive mode, don't clear without explicit confirmation
+            };
+
+            if confirmation {
+                std::fs::remove_dir_all(&cache_dir).with_context(|| {
+                    format!("Failed to remove cache directory {}", cache_dir.display())
+                })?;
+
+                println!("Cache cleared successfully.");
+            } else {
+                println!("Cache not cleared.");
+            }
+        }
+        Some(unknown) => {
+            eprintln!("Unknown cache action: {}", unknown);
+            eprintln!("Available actions: list, clear");
+            std::process::exit(1);
+        }
+    }
+
+    Ok(())
+}
+
 /// Validate a GitHub token by making a test API call
 async fn validate_github_token(token: &str) -> anyhow::Result<()> {
     let octocrab = octocrab::Octocrab::builder()
@@ -359,9 +438,16 @@ async fn handle_quick_add(
     cli: &Cli,
     out_dir: Option<&str>,
 ) -> anyhow::Result<()> {
-    // Create repo tree and find available manifests in the quick-add directory
-    let mut repo_tree = github::RepoTree::new();
-    let available_manifests = find_manifests_in_quickadd(&mut repo_tree, locator).await?;
+    // Create repo tree with persistent cache and find available manifests in the quick-add directory
+    let mut repo_tree = if cli.refresh {
+        // Use regular tree without persistent cache for force refresh
+        github::RepoTree::new()
+    } else {
+        // Use persistent cache for normal operation
+        github::RepoTree::with_persistent_cache()?
+    };
+    let available_manifests =
+        find_manifests_in_quickadd(&mut repo_tree, locator, cli.refresh).await?;
 
     if available_manifests.is_empty() {
         println!("No manifests found in the quick-add/ directory.");
@@ -390,6 +476,7 @@ async fn handle_quick_add(
         manifest_id,
         &mut repo_tree,
         locator,
+        cli.refresh,
     )
     .await?;
 

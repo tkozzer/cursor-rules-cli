@@ -927,8 +927,8 @@ mod tests {
 
         // Test that empty cache is initialized correctly
         assert!(tree.cache.is_empty());
-        assert!(tree.cache.get("").is_none());
-        assert!(tree.cache.get("nonexistent").is_none());
+        assert!(!tree.cache.contains_key(""));
+        assert!(!tree.cache.contains_key("nonexistent"));
 
         // Test that cache can store and retrieve values
         let mut tree_mut = tree;

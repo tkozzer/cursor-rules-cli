@@ -103,11 +103,14 @@ pub fn parse_json_manifest(content: &str) -> Result<ManifestSchema, ManifestErro
 pub async fn find_manifests_in_quickadd(
     repo_tree: &mut RepoTree,
     locator: &RepoLocator,
+    force_refresh: bool,
 ) -> anyhow::Result<HashMap<String, (ManifestFormat, String)>> {
     let mut manifests: HashMap<String, (ManifestFormat, String)> = HashMap::new();
 
     // Get children of quick-add directory
-    let quickadd_children = repo_tree.children(locator, "quick-add").await?;
+    let quickadd_children = repo_tree
+        .children(locator, "quick-add", force_refresh)
+        .await?;
 
     for child in quickadd_children {
         if let Some(format) = get_manifest_format(&child.name) {
@@ -132,6 +135,7 @@ pub async fn validate_manifest_entries(
     entries: &[String],
     repo_tree: &mut RepoTree,
     locator: &RepoLocator,
+    force_refresh: bool,
 ) -> anyhow::Result<(Vec<String>, Vec<String>, Vec<String>)> {
     let mut valid_entries = Vec::new();
     let mut errors = Vec::new();
@@ -150,7 +154,7 @@ pub async fn validate_manifest_entries(
         }
 
         // Check if file exists in repository tree
-        if file_exists_in_repo(entry, repo_tree, locator).await? {
+        if file_exists_in_repo(entry, repo_tree, locator, force_refresh).await? {
             valid_entries.push(entry.to_string());
         } else {
             errors.push(format!("File not found in repository: {}", entry));
@@ -165,6 +169,7 @@ async fn file_exists_in_repo(
     file_path: &str,
     repo_tree: &mut RepoTree,
     locator: &RepoLocator,
+    force_refresh: bool,
 ) -> anyhow::Result<bool> {
     // Extract directory path from file path
     let dir_path = if let Some(pos) = file_path.rfind('/') {
@@ -174,7 +179,7 @@ async fn file_exists_in_repo(
     };
 
     // Get children of the directory
-    let children = repo_tree.children(locator, dir_path).await?;
+    let children = repo_tree.children(locator, dir_path, force_refresh).await?;
 
     // Check if the file exists in the directory
     let _file_name = file_path.split('/').next_back().unwrap_or("");
@@ -194,6 +199,7 @@ pub async fn parse_manifest_content(
     filename: &str,
     repo_tree: &mut RepoTree,
     locator: &RepoLocator,
+    force_refresh: bool,
 ) -> Result<Manifest, ManifestError> {
     let (entries, name, description) = match format {
         ManifestFormat::Txt => {
@@ -211,9 +217,10 @@ pub async fn parse_manifest_content(
         }
     };
 
-    let (valid_entries, errors, warnings) = validate_manifest_entries(&entries, repo_tree, locator)
-        .await
-        .map_err(|e| ManifestError::ValidationError(e.to_string()))?;
+    let (valid_entries, errors, warnings) =
+        validate_manifest_entries(&entries, repo_tree, locator, force_refresh)
+            .await
+            .map_err(|e| ManifestError::ValidationError(e.to_string()))?;
 
     Ok(Manifest {
         name,

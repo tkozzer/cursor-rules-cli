@@ -119,7 +119,7 @@ async fn run_app<B: ratatui::backend::Backend>(
         // Ensure children loaded for current dir
         if app.items.is_empty() {
             app.loading = true;
-            match app.tree.children(&app.locator, &app.dir_path).await {
+            match app.tree.children(&app.locator, &app.dir_path, false).await {
                 Ok(children) => {
                     app.items = children
                         .iter()

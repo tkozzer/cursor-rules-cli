@@ -301,4 +301,4 @@ ls -la "/Users/$(whoami)/Library/Caches/cursor-rules-cli/"
 
 ---
 
-_Previous: [FR-5 – Copy Semantics](fr5-copy-semantics.md) • Next: [FR-7 – Telemetry](fr7-telemetry.md)_ 
+_Previous: [FR-5 – Copy Semantics](fr5-copy-semantics.md) • Next: [FR-7 – UI Cleanup](fr7-ui-cleanup.md)_ 

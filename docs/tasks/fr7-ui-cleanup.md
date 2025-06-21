@@ -1,4 +1,4 @@
-# FR-8 – UI Cleanup & Code Quality
+# FR-7 – UI Cleanup & Code Quality
 
 Status: **Planned**
 
@@ -129,4 +129,4 @@ This workstream focuses on polishing the user interface, resolving visual incons
 
 ---
 
-_Previous: [FR-7 – Telemetry](fr7-telemetry.md) • Next: TBD_ 
+_Previous: [FR-6 – Offline Cache](fr6-offline-cache.md) • Next: TBD_ 

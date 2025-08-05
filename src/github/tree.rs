@@ -371,7 +371,7 @@ mod tests {
                 NodeKind::RuleFile
             };
 
-            assert_eq!(kind, expected_kind, "Failed for file: {}", path);
+            assert_eq!(kind, expected_kind, "Failed for file: {path}");
         }
     }
 
@@ -398,14 +398,9 @@ mod tests {
 
             assert_eq!(
                 dir_key, expected_dir,
-                "Directory parsing failed for: {}",
-                full_path
+                "Directory parsing failed for: {full_path}"
             );
-            assert_eq!(
-                name, expected_name,
-                "Name parsing failed for: {}",
-                full_path
-            );
+            assert_eq!(name, expected_name, "Name parsing failed for: {full_path}");
         }
     }
 
@@ -538,10 +533,9 @@ mod tests {
 
             assert_eq!(
                 dir_key, expected_dir,
-                "Directory parsing failed for: '{}'",
-                input
+                "Directory parsing failed for: '{input}'"
             );
-            assert_eq!(name, expected_name, "Name parsing failed for: '{}'", input);
+            assert_eq!(name, expected_name, "Name parsing failed for: '{input}'");
         }
     }
 
@@ -583,7 +577,7 @@ mod tests {
                 NodeKind::RuleFile
             };
 
-            assert_eq!(kind, expected_kind, "Failed for filename: '{}'", filename);
+            assert_eq!(kind, expected_kind, "Failed for filename: '{filename}'");
         }
     }
 

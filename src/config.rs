@@ -936,8 +936,7 @@ mod tests {
             let result = update_config_value("telemetry", value);
             assert!(
                 result.is_err(),
-                "Should fail for invalid telemetry value: {}",
-                value
+                "Should fail for invalid telemetry value: {value}"
             );
         }
 
@@ -963,7 +962,7 @@ mod tests {
 
         for key in valid_keys {
             let result = delete_config_value(key);
-            assert!(result.is_ok(), "Failed to delete key: {}", key);
+            assert!(result.is_ok(), "Failed to delete key: {key}");
         }
 
         // Restore HOME
@@ -1051,8 +1050,7 @@ out_dir = "/path/with/slashes"
             let result = resolve_github_token(None, &mock_store).unwrap();
             assert!(
                 result.is_none(),
-                "Should return None for whitespace: {:?}",
-                whitespace
+                "Should return None for whitespace: {whitespace:?}"
             );
         }
 
@@ -1125,7 +1123,7 @@ telemetry = true"#,
 
         for config_str in partial_configs {
             let result = toml::from_str::<Config>(config_str);
-            assert!(result.is_ok(), "Failed to parse: {}", config_str);
+            assert!(result.is_ok(), "Failed to parse: {config_str}");
         }
     }
 

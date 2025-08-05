@@ -121,7 +121,7 @@ async fn main() {
         Ok(config) => config,
         Err(e) => {
             if cli.verbose {
-                eprintln!("Warning: Failed to load config: {}", e);
+                eprintln!("Warning: Failed to load config: {e}");
             }
             Config::default()
         }
@@ -132,7 +132,7 @@ async fn main() {
         Ok(token) => token,
         Err(e) => {
             if cli.verbose {
-                eprintln!("Warning: Failed to resolve token: {}", e);
+                eprintln!("Warning: Failed to resolve token: {e}");
             }
             None
         }
@@ -307,7 +307,7 @@ async fn handle_config_command(action: Option<&ConfigAction>) -> anyhow::Result<
                     match validate_github_token(value).await {
                         Ok(()) => println!("✓ Token validation successful."),
                         Err(e) => {
-                            eprintln!("⚠ Warning: Token validation failed: {}", e);
+                            eprintln!("⚠ Warning: Token validation failed: {e}");
                             eprintln!("The token has been stored but may not be valid.");
                         }
                     }
@@ -317,7 +317,7 @@ async fn handle_config_command(action: Option<&ConfigAction>) -> anyhow::Result<
             } else {
                 // Regular config value
                 update_config_value(key, value).map_err(anyhow::Error::from)?;
-                println!("Set {} = {}", key, value);
+                println!("Set {key} = {value}");
             }
         }
         Some(ConfigAction::Delete { key }) => {
@@ -341,7 +341,7 @@ async fn handle_config_command(action: Option<&ConfigAction>) -> anyhow::Result<
             } else {
                 // Regular config value
                 delete_config_value(key).map_err(anyhow::Error::from)?;
-                println!("Deleted {}", key);
+                println!("Deleted {key}");
             }
         }
     }
@@ -378,7 +378,7 @@ async fn handle_cache_command(action: Option<&str>) -> anyhow::Result<()> {
                     format!("{}d ago", age.num_days())
                 };
 
-                println!("  {}/{} (cached {})", owner, repo, age_str);
+                println!("  {owner}/{repo} (cached {age_str})");
             }
         }
         Some("clear") => {
@@ -411,7 +411,7 @@ async fn handle_cache_command(action: Option<&str>) -> anyhow::Result<()> {
             }
         }
         Some(unknown) => {
-            eprintln!("Unknown cache action: {}", unknown);
+            eprintln!("Unknown cache action: {unknown}");
             eprintln!("Available actions: list, clear");
             std::process::exit(1);
         }
@@ -459,7 +459,7 @@ async fn handle_quick_add(
         match resolve_manifest_id(manifest_id, &available_manifests) {
             Some(manifest) => manifest,
             None => {
-                eprintln!("Manifest '{}' not found.", manifest_id);
+                eprintln!("Manifest '{manifest_id}' not found.");
                 eprintln!("Available manifests:");
                 for (id, (format, _)) in &available_manifests {
                     eprintln!("  - {} (.{})", id, format_extension(format));
@@ -484,14 +484,14 @@ async fn handle_quick_add(
     if !manifest.warnings.is_empty() {
         eprintln!("Warnings:");
         for warning in &manifest.warnings {
-            eprintln!("  ⚠ {}", warning);
+            eprintln!("  ⚠ {warning}");
         }
     }
 
     if !manifest.errors.is_empty() {
         eprintln!("Errors:");
         for error in &manifest.errors {
-            eprintln!("  ✗ {}", error);
+            eprintln!("  ✗ {error}");
         }
         std::process::exit(2);
     }
@@ -523,7 +523,7 @@ async fn handle_quick_add(
         println!();
         println!("Manifest: {} ({})", manifest.name, manifest_id);
         if let Some(description) = &manifest.description {
-            println!("Description: {}", description);
+            println!("Description: {description}");
         }
         println!();
         println!("{}", render_copy_plan_table(&copy_plan));
@@ -536,7 +536,7 @@ async fn handle_quick_add(
     // Execute the copy plan
     println!("Applying manifest: {} ({})", manifest.name, manifest_id);
     if let Some(description) = &manifest.description {
-        println!("Description: {}", description);
+        println!("Description: {description}");
     }
     println!();
 
@@ -587,13 +587,13 @@ async fn handle_browser_selection(
             manifest_filename
         };
 
-        println!("Applying manifest: {}", manifest_id);
+        println!("Applying manifest: {manifest_id}");
 
         // Use the existing quick-add logic
         handle_quick_add(locator, manifest_id, cli, out_dir).await
     } else if file_path.ends_with(".mdc") {
         // Single file copy
-        println!("Copying file: {}", file_path);
+        println!("Copying file: {file_path}");
 
         let copy_config = CopyConfig {
             output_dir: out_dir
@@ -611,7 +611,7 @@ async fn handle_browser_selection(
         let copy_plan = create_copy_plan(&[file_path.to_string()], &copy_config)?;
 
         if cli.dry_run {
-            println!("Dry-run mode: Would copy {}", file_path);
+            println!("Dry-run mode: Would copy {file_path}");
         } else {
             // Create appropriate prompt service based on CLI flags
             let prompt_service: Box<dyn PromptService> = if cli.force {
@@ -629,7 +629,7 @@ async fn handle_browser_selection(
         Ok(())
     } else {
         // Unsupported file type
-        println!("File type not supported for copying: {}", file_path);
+        println!("File type not supported for copying: {file_path}");
         Ok(())
     }
 }

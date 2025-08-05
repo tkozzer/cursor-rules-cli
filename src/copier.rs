@@ -867,7 +867,7 @@ mod tests {
             action: CopyAction::Copy,
         };
 
-        let debug_str = format!("{:?}", plan);
+        let debug_str = format!("{plan:?}");
         assert!(debug_str.contains("test.mdc"));
         assert!(debug_str.contains("would_overwrite: false"));
     }
@@ -1043,8 +1043,7 @@ mod tests {
             // Should fail due to path validation
             assert!(
                 result.is_err(),
-                "Path traversal should be blocked for: {}",
-                entry
+                "Path traversal should be blocked for: {entry}"
             );
 
             let error_msg = result.unwrap_err().to_string().to_lowercase();
@@ -1052,9 +1051,7 @@ mod tests {
                 error_msg.contains("path traversal")
                     || error_msg.contains("invalid")
                     || error_msg.contains("outside"),
-                "Error should mention path traversal for: {} (got: {})",
-                entry,
-                error_msg
+                "Error should mention path traversal for: {entry} (got: {error_msg})"
             );
         }
     }
@@ -1083,8 +1080,7 @@ mod tests {
             // Should fail due to Windows reserved name validation
             assert!(
                 result.is_err(),
-                "Windows reserved name should be blocked: {}",
-                name
+                "Windows reserved name should be blocked: {name}"
             );
 
             let error_msg = result.unwrap_err().to_string().to_lowercase();
@@ -1092,9 +1088,7 @@ mod tests {
                 error_msg.contains("reserved")
                     || error_msg.contains("windows")
                     || error_msg.contains("invalid destination"),
-                "Error should mention reserved name for: {} (got: {})",
-                name,
-                error_msg
+                "Error should mention reserved name for: {name} (got: {error_msg})"
             );
         }
     }
@@ -1117,8 +1111,7 @@ mod tests {
         let error_msg = result.unwrap_err().to_string().to_lowercase();
         assert!(
             error_msg.contains("null") || error_msg.contains("invalid destination"),
-            "Error should mention null byte (got: {})",
-            error_msg
+            "Error should mention null byte (got: {error_msg})"
         );
     }
 
@@ -1142,7 +1135,7 @@ mod tests {
 
         for entry in safe_entries {
             let result = create_copy_plan(&[entry.clone()], &config);
-            assert!(result.is_ok(), "Safe path should be allowed: {}", entry);
+            assert!(result.is_ok(), "Safe path should be allowed: {entry}");
 
             let plans = result.unwrap();
             assert_eq!(plans.len(), 1);

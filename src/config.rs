@@ -81,7 +81,7 @@ pub struct KeyringStore;
 impl SecretStore for KeyringStore {
     fn get_token(&self) -> Result<Option<String>, ConfigError> {
         let entry = Entry::new(KEYRING_SERVICE, KEYRING_ACCOUNT).map_err(|e| {
-            ConfigError::KeyringError(format!("Failed to create keyring entry: {}", e))
+            ConfigError::KeyringError(format!("Failed to create keyring entry: {e}"))
         })?;
 
         match entry.get_password() {
@@ -96,7 +96,7 @@ impl SecretStore for KeyringStore {
                 } else if e.to_string().contains("too long") {
                     "Token is too long for the keyring service. Please use a shorter token or configure the token via environment variable.".to_string()
                 } else {
-                    format!("Failed to retrieve token from keyring: {}. Try setting GITHUB_TOKEN environment variable as a fallback.", e)
+                    format!("Failed to retrieve token from keyring: {e}. Try setting GITHUB_TOKEN environment variable as a fallback.")
                 };
                 Err(ConfigError::KeyringError(error_msg))
             }
@@ -105,25 +105,24 @@ impl SecretStore for KeyringStore {
 
     fn set_token(&self, token: &str) -> Result<(), ConfigError> {
         let entry = Entry::new(KEYRING_SERVICE, KEYRING_ACCOUNT).map_err(|e| {
-            ConfigError::KeyringError(format!("Failed to create keyring entry: {}", e))
+            ConfigError::KeyringError(format!("Failed to create keyring entry: {e}"))
         })?;
 
         entry
             .set_password(token)
-            .map_err(|e| ConfigError::KeyringError(format!("Failed to store token: {}", e)))
+            .map_err(|e| ConfigError::KeyringError(format!("Failed to store token: {e}")))
     }
 
     fn delete_token(&self) -> Result<(), ConfigError> {
         let entry = Entry::new(KEYRING_SERVICE, KEYRING_ACCOUNT).map_err(|e| {
-            ConfigError::KeyringError(format!("Failed to create keyring entry: {}", e))
+            ConfigError::KeyringError(format!("Failed to create keyring entry: {e}"))
         })?;
 
         match entry.delete_credential() {
             Ok(()) => Ok(()),
             Err(KeyringError::NoEntry) => Ok(()), // Already deleted
             Err(e) => Err(ConfigError::KeyringError(format!(
-                "Failed to delete token: {}",
-                e
+                "Failed to delete token: {e}"
             ))),
         }
     }
@@ -212,8 +211,7 @@ pub fn update_config_value(key: &str, value: &str) -> Result<(), ConfigError> {
         }
         _ => {
             return Err(ConfigError::ParseError(DeError::custom(format!(
-                "Unknown config key: {}",
-                key
+                "Unknown config key: {key}"
             ))))
         }
     }
@@ -232,8 +230,7 @@ pub fn delete_config_value(key: &str) -> Result<(), ConfigError> {
         "telemetry" => config.telemetry = None,
         _ => {
             return Err(ConfigError::ParseError(DeError::custom(format!(
-                "Unknown config key: {}",
-                key
+                "Unknown config key: {key}"
             ))))
         }
     }
@@ -254,7 +251,7 @@ pub async fn validate_github_token_with_scopes(token: &str) -> Result<Vec<String
         .current()
         .user()
         .await
-        .map_err(|e| ConfigError::KeyringError(format!("Token validation failed: {}", e)))?;
+        .map_err(|e| ConfigError::KeyringError(format!("Token validation failed: {e}")))?;
 
     // Try to get token scopes from headers (this is a simplified approach)
     // In practice, you might need to make a specific API call to check scopes
@@ -306,7 +303,7 @@ pub async fn handle_auth_error_interactive(
             Ok(Some(token))
         }
         Err(e) => {
-            eprintln!("⚠ Token validation failed: {}", e);
+            eprintln!("⚠ Token validation failed: {e}");
             Ok(None)
         }
     }
@@ -939,8 +936,7 @@ mod tests {
             let result = update_config_value("telemetry", value);
             assert!(
                 result.is_err(),
-                "Should fail for invalid telemetry value: {}",
-                value
+                "Should fail for invalid telemetry value: {value}"
             );
         }
 
@@ -966,7 +962,7 @@ mod tests {
 
         for key in valid_keys {
             let result = delete_config_value(key);
-            assert!(result.is_ok(), "Failed to delete key: {}", key);
+            assert!(result.is_ok(), "Failed to delete key: {key}");
         }
 
         // Restore HOME
@@ -1054,8 +1050,7 @@ out_dir = "/path/with/slashes"
             let result = resolve_github_token(None, &mock_store).unwrap();
             assert!(
                 result.is_none(),
-                "Should return None for whitespace: {:?}",
-                whitespace
+                "Should return None for whitespace: {whitespace:?}"
             );
         }
 
@@ -1128,7 +1123,7 @@ telemetry = true"#,
 
         for config_str in partial_configs {
             let result = toml::from_str::<Config>(config_str);
-            assert!(result.is_ok(), "Failed to parse: {}", config_str);
+            assert!(result.is_ok(), "Failed to parse: {config_str}");
         }
     }
 

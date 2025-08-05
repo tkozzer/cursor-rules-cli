@@ -81,10 +81,7 @@ impl PromptService for InteractivePromptService {
             return Ok(ConflictChoice::Skip);
         }
 
-        let message = format!(
-            "File '{}' already exists. What would you like to do?",
-            filename
-        );
+        let message = format!("File '{filename}' already exists. What would you like to do?");
 
         let options = vec![
             "Overwrite",
@@ -96,10 +93,7 @@ impl PromptService for InteractivePromptService {
             "Cancel",
         ];
 
-        let help_message = format!(
-            "Source: {}\nChoose how to handle this conflict:",
-            source_path
-        );
+        let help_message = format!("Source: {source_path}\nChoose how to handle this conflict:");
 
         let ans = Select::new(&message, options)
             .with_help_message(&help_message)

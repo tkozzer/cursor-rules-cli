@@ -149,7 +149,7 @@ pub async fn validate_manifest_entries(
 
         // Check if it's a .mdc file
         if !entry.ends_with(".mdc") {
-            warnings.push(format!("Non-.mdc file ignored: {}", entry));
+            warnings.push(format!("Non-.mdc file ignored: {entry}"));
             continue;
         }
 
@@ -157,7 +157,7 @@ pub async fn validate_manifest_entries(
         if file_exists_in_repo(entry, repo_tree, locator, force_refresh).await? {
             valid_entries.push(entry.to_string());
         } else {
-            errors.push(format!("File not found in repository: {}", entry));
+            errors.push(format!("File not found in repository: {entry}"));
         }
     }
 
@@ -528,10 +528,10 @@ invalid yaml: [unclosed
 
         // Test error trait implementations
         let parse_err = ManifestError::ParseError("invalid syntax".to_string());
-        assert!(format!("{:?}", parse_err).contains("ParseError"));
+        assert!(format!("{parse_err:?}").contains("ParseError"));
 
         let validation_err = ManifestError::ValidationError("validation issue".to_string());
-        assert!(format!("{:?}", validation_err).contains("ValidationError"));
+        assert!(format!("{validation_err:?}").contains("ValidationError"));
     }
 
     #[test]
@@ -548,9 +548,7 @@ invalid yaml: [unclosed
                 if i < j {
                     assert!(
                         format1.priority() < format2.priority(),
-                        "Priority ordering failed for {:?} vs {:?}",
-                        format1,
-                        format2
+                        "Priority ordering failed for {format1:?} vs {format2:?}"
                     );
                 }
             }
@@ -650,7 +648,7 @@ invalid yaml: [unclosed
         assert_eq!(manifest.warnings, cloned.warnings);
 
         // Test debug formatting
-        let debug_str = format!("{:?}", manifest);
+        let debug_str = format!("{manifest:?}");
         assert!(debug_str.contains("Test Manifest"));
         assert!(debug_str.contains("entry1.mdc"));
     }
@@ -707,15 +705,15 @@ invalid yaml: [unclosed
     fn test_manifest_format_debug_and_clone() {
         // Test Debug trait implementation
         let txt_format = ManifestFormat::Txt;
-        let debug_str = format!("{:?}", txt_format);
+        let debug_str = format!("{txt_format:?}");
         assert!(debug_str.contains("Txt"));
 
         let yaml_format = ManifestFormat::Yaml;
-        let debug_str = format!("{:?}", yaml_format);
+        let debug_str = format!("{yaml_format:?}");
         assert!(debug_str.contains("Yaml"));
 
         let json_format = ManifestFormat::Json;
-        let debug_str = format!("{:?}", json_format);
+        let debug_str = format!("{json_format:?}");
         assert!(debug_str.contains("Json"));
 
         // Test Clone trait

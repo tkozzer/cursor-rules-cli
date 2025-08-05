@@ -92,6 +92,8 @@ jobs:
             ~/.cargo/git
             target
           key: ubuntu-latest-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ubuntu-latest-cargo-
 
       - name: Install cargo-llvm-cov
         uses: taiki-e/install-action@cargo-llvm-cov
@@ -163,6 +165,8 @@ jobs:
             ~/.cargo/git
             target
           key: ubuntu-latest-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ubuntu-latest-cargo-
 
       - name: Run cargo clippy
         run: cargo clippy --all-targets --all-features -- -D warnings
@@ -200,6 +204,9 @@ jobs:
             ~/.cargo/git
             target
           key: ubuntu-latest-cargo-msrv-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ubuntu-latest-cargo-msrv-
+            ubuntu-latest-cargo-
 
       - name: Check MSRV
         run: cargo check
@@ -222,6 +229,8 @@ jobs:
             ~/.cargo/git
             target
           key: ubuntu-latest-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ubuntu-latest-cargo-
 
       - name: Check documentation
         run: cargo doc --no-deps --document-private-items

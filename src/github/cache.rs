@@ -85,7 +85,7 @@ impl FileSystemCache {
     /// Compute SHA-1 hash for cache directory name
     fn compute_cache_key(owner: &str, repo: &str) -> String {
         let mut hasher = Sha1::new();
-        hasher.update(format!("{}/{}", owner, repo).as_bytes());
+        hasher.update(format!("{owner}/{repo}").as_bytes());
         format!("{:x}", hasher.finalize())
     }
 
@@ -285,7 +285,7 @@ impl PersistentCache for FileSystemCache {
         for entry in cache_dirs {
             let entry = entry?;
             let blobs_dir = entry.path().join("blobs");
-            let blob_path = blobs_dir.join(format!("{}.mdc", content_sha));
+            let blob_path = blobs_dir.join(format!("{content_sha}.mdc"));
 
             if blob_path.exists() {
                 let content = fs::read_to_string(&blob_path).with_context(|| {
@@ -313,7 +313,7 @@ impl PersistentCache for FileSystemCache {
                     format!("Failed to create blobs directory {}", blobs_dir.display())
                 })?;
 
-                let blob_path = blobs_dir.join(format!("{}.mdc", content_sha));
+                let blob_path = blobs_dir.join(format!("{content_sha}.mdc"));
                 fs::write(&blob_path, content).with_context(|| {
                     format!("Failed to write blob cache to {}", blob_path.display())
                 })?;

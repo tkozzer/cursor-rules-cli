@@ -329,7 +329,7 @@ fn fg_color(node: &crate::github::RepoNode) -> ratatui::style::Color {
 
 fn bubble(node: &crate::github::RepoNode) -> String {
     if let Some(count) = node.manifest_count {
-        format!("  [{} files]", count)
+        format!("  [{count} files]")
     } else {
         String::new()
     }

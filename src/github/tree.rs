@@ -371,7 +371,7 @@ mod tests {
                 NodeKind::RuleFile
             };
 
-            assert_eq!(kind, expected_kind, "Failed for file: {}", path);
+            assert_eq!(kind, expected_kind, "Failed for file: {path}");
         }
     }
 
@@ -398,14 +398,9 @@ mod tests {
 
             assert_eq!(
                 dir_key, expected_dir,
-                "Directory parsing failed for: {}",
-                full_path
+                "Directory parsing failed for: {full_path}"
             );
-            assert_eq!(
-                name, expected_name,
-                "Name parsing failed for: {}",
-                full_path
-            );
+            assert_eq!(name, expected_name, "Name parsing failed for: {full_path}");
         }
     }
 
@@ -538,10 +533,9 @@ mod tests {
 
             assert_eq!(
                 dir_key, expected_dir,
-                "Directory parsing failed for: '{}'",
-                input
+                "Directory parsing failed for: '{input}'"
             );
-            assert_eq!(name, expected_name, "Name parsing failed for: '{}'", input);
+            assert_eq!(name, expected_name, "Name parsing failed for: '{input}'");
         }
     }
 
@@ -583,7 +577,7 @@ mod tests {
                 NodeKind::RuleFile
             };
 
-            assert_eq!(kind, expected_kind, "Failed for filename: '{}'", filename);
+            assert_eq!(kind, expected_kind, "Failed for filename: '{filename}'");
         }
     }
 
@@ -710,7 +704,7 @@ mod tests {
                 NodeKind::RuleFile
             };
 
-            assert_eq!(actual, expected, "Failed file type detection for: {}", path);
+            assert_eq!(actual, expected, "Failed file type detection for: {path}");
         }
 
         // Test directory key extraction
@@ -730,8 +724,7 @@ mod tests {
 
             assert_eq!(
                 dir_key, expected_dir,
-                "Directory extraction failed for: {}",
-                full_path
+                "Directory extraction failed for: {full_path}"
             );
         }
 
@@ -775,8 +768,7 @@ mod tests {
         for error in rate_limit_errors {
             assert!(
                 tree.is_rate_limit_error(&error),
-                "Should detect rate limit error: {}",
-                error
+                "Should detect rate limit error: {error}"
             );
         }
 
@@ -791,8 +783,7 @@ mod tests {
         for error in non_rate_limit_errors {
             assert!(
                 !tree.is_rate_limit_error(&error),
-                "Should not detect rate limit error: {}",
-                error
+                "Should not detect rate limit error: {error}"
             );
         }
     }
@@ -962,13 +953,11 @@ mod tests {
 
             assert_eq!(
                 dir_key, expected_dir,
-                "Directory parsing failed for edge case: '{}'",
-                full_path
+                "Directory parsing failed for edge case: '{full_path}'"
             );
             assert_eq!(
                 name, expected_name,
-                "Name parsing failed for edge case: '{}'",
-                full_path
+                "Name parsing failed for edge case: '{full_path}'"
             );
         }
     }

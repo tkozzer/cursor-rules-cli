@@ -221,7 +221,7 @@ async fn search_owner_by_fullname(
     token: Option<&str>,
 ) -> Result<Option<String>, RepoDiscoveryError> {
     let raw = fullname.trim().replace(' ', "+");
-    let query = format!("fullname:{}", raw);
+    let query = format!("fullname:{raw}");
 
     let octocrab = build_octocrab(token)?;
 
@@ -257,7 +257,7 @@ async fn verify_repo_exists(
 ) -> Result<(), RepoDiscoveryError> {
     let octocrab = build_octocrab(token)?;
 
-    let path = format!("/repos/{}/{}", owner, repo);
+    let path = format!("/repos/{owner}/{repo}");
     let res: Result<serde_json::Value, octocrab::Error> = octocrab.get(&path, None::<&()>).await;
 
     match res {

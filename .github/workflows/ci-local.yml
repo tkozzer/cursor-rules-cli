@@ -15,24 +15,9 @@ env:
   RUST_BACKTRACE: 1
 
 jobs:
-  # Warning job that runs on GitHub to inform about local-only nature
-  github-warning:
-    name: ⚠️ Local Development Only
-    runs-on: ubuntu-latest
-    if: ${{ !env.ACT }}
-    steps:
-      - name: Warning message
-        run: |
-          echo "::warning::This workflow is designed for local development only using 'act'."
-          echo "::warning::It should not be run on GitHub's servers."
-          echo "::notice::To run locally: act workflow_dispatch -W .github/workflows/ci-local.yml"
-          exit 0
-
   check:
     name: Check
     runs-on: ubuntu-latest
-    # Only run when using `act` locally, not on GitHub
-    if: ${{ env.ACT }}
     steps:
       - name: Checkout sources
         uses: actions/checkout@v4
@@ -46,10 +31,10 @@ jobs:
   test:
     name: Test Suite
     runs-on: ${{ matrix.os }}
-    # Only run when using `act` locally, not on GitHub
-    if: ${{ env.ACT }}
     strategy:
       matrix:
+        # Simplified matrix for local testing - only test the most common combination
+        # Full matrix testing (multiple OS/rust versions) happens on GitHub CI
         os: [ubuntu-latest]
         rust: [stable]
     steps:
@@ -78,8 +63,6 @@ jobs:
   coverage:
     name: Code Coverage
     runs-on: ubuntu-latest
-    # Only run when using `act` locally, not on GitHub
-    if: ${{ env.ACT }}
     steps:
       - name: Checkout sources
         uses: actions/checkout@v4
@@ -97,23 +80,38 @@ jobs:
             ~/.cargo/git
             target
           key: ubuntu-latest-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ubuntu-latest-cargo-
 
       - name: Install cargo-llvm-cov
         uses: taiki-e/install-action@cargo-llvm-cov
 
       - name: Generate coverage report
-        run: cargo llvm-cov --all-features --workspace --lcov --output-path lcov.info
-
-      - name: Upload coverage to Codecov (disabled for local)
         run: |
-          echo "ℹ️  Codecov upload disabled for local CI"
-          echo "📊 Coverage report generated locally at: lcov.info"
+          # Generate coverage in multiple formats (same as CI)
+          cargo llvm-cov --all-features --workspace --lcov --output-path lcov.info
+          cargo llvm-cov --all-features --workspace --summary-only > coverage-summary.txt
+          cargo llvm-cov --all-features --workspace --html
+
+      - name: Display coverage summary (local)
+        run: |
+          echo "## 📊 Code Coverage Report (Local)" 
+          echo ""
+          echo "### Summary"
+          echo '```'
+          cat coverage-summary.txt
+          echo '```'
+          echo ""
+          echo "### Local Files Generated"
+          echo "- **LCOV Report**: lcov.info"
+          echo "- **HTML Report**: target/llvm-cov/html/"
+          echo "- **Summary**: coverage-summary.txt"
+          echo ""
+          echo "ℹ️  Artifact upload disabled for local CI"
 
   fmt:
     name: Rustfmt
     runs-on: ubuntu-latest
-    # Only run when using `act` locally, not on GitHub
-    if: ${{ env.ACT }}
     steps:
       - name: Checkout sources
         uses: actions/checkout@v4
@@ -129,8 +127,6 @@ jobs:
   clippy:
     name: Clippy
     runs-on: ubuntu-latest
-    # Only run when using `act` locally, not on GitHub
-    if: ${{ env.ACT }}
     steps:
       - name: Checkout sources
         uses: actions/checkout@v4
@@ -148,6 +144,8 @@ jobs:
             ~/.cargo/git
             target
           key: ubuntu-latest-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ubuntu-latest-cargo-
 
       - name: Run cargo clippy
         run: cargo clippy --all-targets --all-features -- -D warnings
@@ -155,8 +153,6 @@ jobs:
   security_audit:
     name: Security Audit
     runs-on: ubuntu-latest
-    # Only run when using `act` locally, not on GitHub
-    if: ${{ env.ACT }}
     steps:
       - name: Checkout sources
         uses: actions/checkout@v4
@@ -170,8 +166,6 @@ jobs:
   msrv:
     name: Minimum Supported Rust Version
     runs-on: ubuntu-latest
-    # Only run when using `act` locally, not on GitHub
-    if: ${{ env.ACT }}
     steps:
       - name: Checkout sources
         uses: actions/checkout@v4
@@ -189,6 +183,9 @@ jobs:
             ~/.cargo/git
             target
           key: ubuntu-latest-cargo-msrv-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ubuntu-latest-cargo-msrv-
+            ubuntu-latest-cargo-
 
       - name: Check MSRV
         run: cargo check
@@ -196,8 +193,6 @@ jobs:
   docs:
     name: Documentation
     runs-on: ubuntu-latest
-    # Only run when using `act` locally, not on GitHub
-    if: ${{ env.ACT }}
     steps:
       - name: Checkout sources
         uses: actions/checkout@v4
@@ -213,6 +208,8 @@ jobs:
             ~/.cargo/git
             target
           key: ubuntu-latest-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ubuntu-latest-cargo-
 
       - name: Check documentation
         run: cargo doc --no-deps --document-private-items
@@ -220,8 +217,7 @@ jobs:
   # This job ensures all CI jobs pass
   ci:
     name: CI
-    # Only run when using `act` locally, not on GitHub
-    if: ${{ env.ACT && always() }}
+    if: always()
     needs:
       - check
       - test

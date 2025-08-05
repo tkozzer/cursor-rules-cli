@@ -245,7 +245,7 @@ fn generate_unique_filename(base_path: &Path) -> PathBuf {
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap()
         .as_secs();
-    let fallback_filename = format!("{}-{}{}", name, timestamp, extension);
+    let fallback_filename = format!("{name}-{timestamp}{extension}");
     parent.join(fallback_filename)
 }
 
@@ -266,7 +266,7 @@ pub fn create_copy_plan(entries: &[String], config: &CopyConfig) -> Result<Vec<C
 
         // Validate the destination path for security
         validate_safe_path(entry, &destination_path, output_dir)
-            .with_context(|| format!("Invalid destination path for {}", entry))?;
+            .with_context(|| format!("Invalid destination path for {entry}"))?;
 
         let would_overwrite = destination_path.exists();
 

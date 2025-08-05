@@ -710,7 +710,7 @@ mod tests {
                 NodeKind::RuleFile
             };
 
-            assert_eq!(actual, expected, "Failed file type detection for: {}", path);
+            assert_eq!(actual, expected, "Failed file type detection for: {path}");
         }
 
         // Test directory key extraction
@@ -730,8 +730,7 @@ mod tests {
 
             assert_eq!(
                 dir_key, expected_dir,
-                "Directory extraction failed for: {}",
-                full_path
+                "Directory extraction failed for: {full_path}"
             );
         }
 

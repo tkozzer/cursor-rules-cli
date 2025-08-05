@@ -85,7 +85,7 @@ impl FileSystemCache {
     /// Compute SHA-1 hash for cache directory name
     fn compute_cache_key(owner: &str, repo: &str) -> String {
         let mut hasher = Sha1::new();
-        hasher.update(format!("{}/{}", owner, repo).as_bytes());
+        hasher.update(format!("{owner}/{repo}").as_bytes());
         format!("{:x}", hasher.finalize())
     }
 

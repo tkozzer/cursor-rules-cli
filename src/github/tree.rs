@@ -775,8 +775,7 @@ mod tests {
         for error in rate_limit_errors {
             assert!(
                 tree.is_rate_limit_error(&error),
-                "Should detect rate limit error: {}",
-                error
+                "Should detect rate limit error: {error}"
             );
         }
 
@@ -791,8 +790,7 @@ mod tests {
         for error in non_rate_limit_errors {
             assert!(
                 !tree.is_rate_limit_error(&error),
-                "Should not detect rate limit error: {}",
-                error
+                "Should not detect rate limit error: {error}"
             );
         }
     }
@@ -962,13 +960,11 @@ mod tests {
 
             assert_eq!(
                 dir_key, expected_dir,
-                "Directory parsing failed for edge case: '{}'",
-                full_path
+                "Directory parsing failed for edge case: '{full_path}'"
             );
             assert_eq!(
                 name, expected_name,
-                "Name parsing failed for edge case: '{}'",
-                full_path
+                "Name parsing failed for edge case: '{full_path}'"
             );
         }
     }

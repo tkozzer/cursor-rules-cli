@@ -127,7 +127,7 @@ impl std::fmt::Display for CopyAction {
             CopyAction::Copy => write!(f, "Copy"),
             CopyAction::Overwrite => write!(f, "Overwrite"),
             CopyAction::Skip => write!(f, "Skip"),
-            CopyAction::Rename(new_name) => write!(f, "Rename → {}", new_name),
+            CopyAction::Rename(new_name) => write!(f, "Rename → {new_name}"),
         }
     }
 }
@@ -232,7 +232,7 @@ fn generate_unique_filename(base_path: &Path) -> PathBuf {
 
     // Try numbered suffixes starting from 1
     for i in 1..=1000 {
-        let new_filename = format!("{}({}){}", name, i, extension);
+        let new_filename = format!("{name}({i}){extension}");
         let new_path = parent.join(&new_filename);
 
         if !new_path.exists() {

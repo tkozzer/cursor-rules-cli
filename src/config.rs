@@ -303,7 +303,7 @@ pub async fn handle_auth_error_interactive(
             Ok(Some(token))
         }
         Err(e) => {
-            eprintln!("⚠ Token validation failed: {}", e);
+            eprintln!("⚠ Token validation failed: {e}");
             Ok(None)
         }
     }

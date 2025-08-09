@@ -1038,7 +1038,7 @@ mod tests {
         ];
 
         for entry in malicious_entries {
-            let result = create_copy_plan(&[entry.clone()], &config);
+            let result = create_copy_plan(std::slice::from_ref(&entry), &config);
 
             // Should fail due to path validation
             assert!(
@@ -1075,7 +1075,7 @@ mod tests {
         ];
 
         for name in reserved_names {
-            let result = create_copy_plan(&[name.clone()], &config);
+            let result = create_copy_plan(std::slice::from_ref(&name), &config);
 
             // Should fail due to Windows reserved name validation
             assert!(
@@ -1134,7 +1134,7 @@ mod tests {
         ];
 
         for entry in safe_entries {
-            let result = create_copy_plan(&[entry.clone()], &config);
+            let result = create_copy_plan(std::slice::from_ref(&entry), &config);
             assert!(result.is_ok(), "Safe path should be allowed: {entry}");
 
             let plans = result.unwrap();

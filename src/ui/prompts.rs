@@ -10,6 +10,7 @@ use is_terminal::IsTerminal;
 
 /// Represents the user's choice for handling a file conflict
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[allow(dead_code)] // Variants are forward-looking; interactive prompting not yet wired into execution
 pub enum ConflictChoice {
     /// Overwrite the existing file
     Overwrite,
@@ -50,6 +51,7 @@ pub trait PromptService: Send + Sync {
     ) -> Result<ConflictChoice>;
 
     /// Check if prompting is available (e.g., terminal is interactive)
+    #[allow(dead_code)] // Forward-looking feature for CLI integration
     fn can_prompt(&self) -> bool;
 }
 
@@ -120,6 +122,8 @@ impl PromptService for InteractivePromptService {
 
 /// Non-interactive prompt service that always returns a default choice
 pub struct NonInteractivePromptService {
+    #[allow(dead_code)]
+    // Read in prompt_conflict, but prompting path not yet exercised in production code
     default_choice: ConflictChoice,
 }
 
